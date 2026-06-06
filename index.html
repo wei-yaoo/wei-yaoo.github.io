@@ -1,93 +1,266 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>我的个人网页</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Channel - 魏瑶的个人网页</title>
 
     <style>
-        body {
-            font-family: 'Inter', "Microsoft YaHei", sans-serif;
-            background: linear-gradient(135deg, #eef2ff, #f8fafc);
+        /* 1. 全局基础重置 */
+        * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
-
-        .container {
-            max-width: 900px;
-            margin: 40px auto;
-            padding: 20px;
+        body {
+            font-family: 'Inter', "Microsoft YaHei", sans-serif;
+            background: linear-gradient(135deg, #eef2ff, #f8fafc);
+            color: #333333;
+            line-height: 1.6;
         }
 
-        .header {
-            text-align: center;
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+        /* 2. 顶部大图巨幕区域 */
+        .hero-section {
+            position: relative;
+            height: 420px; 
+            /* 💡 完美对准你刚刚上传的 background.jpg */
+            background: url('background.jpg') no-repeat center center/cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
             color: white;
-            padding: 40px 20px;
-            border-radius: 16px;
+            /* 文本阴影，确保在亮色云朵背景下字迹清晰 */
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
         }
 
-        .header h1 {
-            margin-bottom: 10px;
-            font-size: 36px;
+        /* 顶部导航栏 */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px 40px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0));
+        }
+        .nav-logo {
+            font-size: 20px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 25px;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+        .nav-links a:hover {
+            opacity: 0.8;
         }
 
-        .content {
-            background-color: white;
-            padding: 30px;
-            margin-top: 30px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+        /* 巨幕中心情感标语 */
+        .hero-title-box {
+            text-align: center;
+            margin-bottom: 95px; 
         }
-
-        h2 {
-            color: #4f46e5;
-            margin-top: 30px;
-        }
-
-        ul {
-            padding-left: 20px;
-        }
-
-        li {
+        .hero-title {
+            font-size: 42px;
+            font-weight: 700;
             margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        .hero-subtitle {
+            font-size: 16px;
+            opacity: 0.95;
+            letter-spacing: 0.5px;
         }
 
+        /* 3. 下半部分卡片重叠布局 */
+        .container {
+            max-width: 950px;
+            margin: -55px auto 40px auto; /* 关键：负边距把白卡片往上提，压在背景大图上 */
+            padding: 0 20px;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* 白底主卡片 */
+        .content-card {
+            background-color: white;
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.07);
+        }
+
+        /* 模块大标题 */
+        .section-title {
+            font-size: 26px;
+            color: #111111;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .section-divider {
+            height: 2px;
+            background-color: #f0f2f5;
+            margin-bottom: 35px;
+        }
+
+        /* 左右双栏网格排版 */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr; /* 左边图片和右边文字的比例 */
+            gap: 45px;
+            align-items: start;
+        }
+
+        /* 左栏：个人卡通头像 */
+        .avatar-box img {
+            width: 100%;
+            height: auto;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* 右栏：细腻文字排版 */
+        .info-box h3 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #111111;
+            margin-bottom: 6px;
+        }
+        .info-tagline {
+            font-size: 15px;
+            color: #ff4757; /* 亮眼的小字标签 */
+            font-weight: 600;
+            margin-bottom: 22px;
+        }
+        .info-text {
+            font-size: 15px;
+            color: #555555;
+            margin-bottom: 16px;
+            text-align: justify;
+        }
+
+        /* 漂亮的小标签式兴趣列表 */
+        h4 {
+            color: #4f46e5;
+            margin-top: 28px;
+            margin-bottom: 12px;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        .interests-tags {
+            list-style: none;
+            padding: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .interests-tags li {
+            background: #f1f2f6;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #57606f;
+            font-weight: 500;
+        }
+
+        /* 联系方式 */
+        .contact-text {
+            font-size: 15px;
+            color: #444444;
+            font-weight: 500;
+        }
+
+        /* 页脚 */
         .footer {
             text-align: center;
-            margin-top: 30px;
-            color: #888;
-            font-size: 14px;
+            margin-top: 45px;
+            color: #b2bec3;
+            font-size: 13px;
+        }
+
+        /* 移动端完美自适应：手机访问自动变成上下单栏 */
+        @media (max-width: 768px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+            .hero-section {
+                height: 340px;
+            }
+            .hero-title {
+                font-size: 32px;
+            }
+            .navbar {
+                padding: 15px 20px;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div class="container">
 
-        <div class="header">
-            <h1>欢迎来到我的个人网页！</h1>
-            <p>这是我用GitHub Pages创建的第一个网页</p>
-        </div>
-
-        <div class="content">
-            <h2>关于我</h2>
-            <p>大家好，我是魏瑶，一名工业设计工程的学生。</p>
-
-            <h2>我的兴趣</h2>
-            <ul>
-                <li>设计</li>
-                <li>旅行</li>
-                <li>摄影</li>
+    <header class="hero-section">
+        <nav class="navbar">
+            <div class="nav-logo">❤ My Channel</div>
+            <ul class="nav-links">
+                <li><a href="#">ME</a></li>
+                <li><a href="#">Information</a></li>
+                <li><a href="#">Interests</a></li>
+                <li><a href="#">Friends</a></li>
             </ul>
+        </nav>
 
-            <h2>联系方式</h2>
-            <p>邮箱：2544393568@qq.com</p>
+        <div class="hero-title-box">
+            <h1 class="hero-title">I'm the protagonist.</h1>
+            <p class="hero-subtitle">Hakuna Matata</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="content-card">
+            
+            <h2 class="section-title">About Me</h2>
+            <div class="section-divider"></div>
+
+            <div class="profile-grid">
+                
+                <div class="avatar-box">
+                    <img src="avatar.jpg" alt="魏瑶的卡通头像">
+                </div>
+
+                <div class="info-box">
+                    <h3>魏瑶 (Siri)</h3>
+                    <p class="info-tagline">(努力学习版 有票版 快乐版)</p>
+                    
+                    <p class="info-text">Hello，我是一个普通的工业设计工程学生。欢迎来到我的个人频道！</p>
+                    <p class="info-text">我喜欢天马行空的幻想，致力于用现代设计手法把有趣的想法带进首饰。本身并不是个绝对的 cute girl，我更努力想成为一个 cool girl。时常安静时常发疯是我的日常，反正开心就好了！</p>
+
+                    <h4>我的兴趣 / Interests</h4>
+                    <ul class="interests-tags">
+                        <li>🎨 画画 </li>
+                        <li>✈️ 旅行</li>
+                        <li>📷 影像摄影</li>
+                    </ul>
+
+                    <h4>联系方式 / Contact</h4>
+                    <p class="contact-text">📧 邮箱：2544393568@qq.com</p>
+                </div>
+
+            </div>
+
         </div>
 
         <div class="footer">
             <p>&copy; 2026 我的个人网页 | Powered by GitHub Pages</p>
         </div>
-
     </div>
+
 </body>
 </html>
