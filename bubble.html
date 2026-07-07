@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bubble Interaction</title>
+
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      cursor: pointer;
+    }
+  </style>
+</head>
+
+<body>
+
+<canvas id="bubbleCanvas"></canvas>
+
+<script>
+  const canvas = document.getElementById("bubbleCanvas");
+  const ctx = canvas.getContext("2d");
+
+  let width, height;
+
+  const colors = [
+    "#1f2aff",
+    "#ff3b82",
+    "#ff8c00",
+    "#39c34a",
+    "#00a6ff",
+    "#9b3cff"
+  ];
+
+  let mouse = {
+    x: 650,
+    y: 260
+  };
+
+  let target = {
+    x: 650,
+    y: 260
+  };
+
+  let smallBubbles = [];
+  let time = 0;
+
+  function resizeCanvas() {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+
+    mouse.x = width * 0.62;
+    mouse.y = height * 0.48;
+    target.x = mouse.x;
+    target.y = mouse.y;
+  }
+
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+
+  window.addEventListener("mousemove", function(e) {
+    mouse.x = e.clientX;
+    mouse.y = e.clientY;
+  });
+
+  window.addEventListener("click", function(e) {
+    for (let i = 0; i < 12; i++) {
+      createSmallBubble();
+    }
+  });
+
+  function drawColorCircle(x, y, r, lineWidth = 3) {
+    const segment = Math.PI * 2 / colors.length;
+
+    for (let i = 0; i < colors.length; i++) {
+      ctx.beginPath();
+      ctx.arc(x, y, r, i * segment, (i + 1.15) * segment);
+      ctx.strokeStyle = colors[i];
+      ctx.lineWidth = lineWidth;
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
+  }
+
+  function drawColorPolygon(points, lineWidth = 3) {
+    for (let i = 0; i < points.length; i++) {
+      const p1 = points[i];
+      const p2 = points[(i + 1) % points.length];
+
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.strokeStyle = colors[i % colors.length];
+      ctx.lineWidth = lineWidth;
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
+  }
+
+  function createHexagon(cx, cy, r, wobble) {
+    let points = [];
+
+    for (let i = 0; i < 6; i++) {
+      const angle = Math.PI / 3 * i + Math.PI / 6;
+      const rr = r + Math.sin(time * 0.03 + i + wobble) * 2;
+
+      points.push({
+        x: cx + Math.cos(angle) * rr,
+        y: cy + Math.sin(angle) * rr
+      });
+    }
+
+    return points;
+  }
+
+  function drawBlower() {
+    const baseX = width * 0.22;
+    const baseY = height * 0.52;
+
+    // 左边两个小圆
+    drawColorCircle(baseX - 120, baseY - 30, 20, 3);
+    drawColorCircle(baseX - 120, baseY + 20, 20, 3);
+
+    // 手柄
+    ctx.beginPath();
+    ctx.moveTo(baseX - 25, baseY);
+    ctx.lineTo(baseX - 25, baseY + 95);
+    ctx.strokeStyle = "#141472";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // 吹泡泡口
+    drawColorCircle(baseX, baseY, 32, 3);
+
+    // 喇叭状连接
+    ctx.beginPath();
+    ctx.moveTo(baseX, baseY - 32);
+    ctx.lineTo(baseX + 78, baseY - 12);
+    ctx.lineTo(baseX + 78, baseY + 12);
+    ctx.lineTo(baseX, baseY + 32);
+    ctx.strokeStyle = "#141472";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // 彩色边
+    ctx.beginPath();
+    ctx.moveTo(baseX + 40, baseY - 20);
+    ctx.lineTo(baseX + 78, baseY - 12);
+    ctx.strokeStyle = "#ff3b82";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(baseX + 40, baseY + 20);
+    ctx.lineTo(baseX + 78, baseY + 12);
+    ctx.strokeStyle = "#39c34a";
+    ctx.lineWidth = 3;
+    ctx.stroke();
+  }
+
+  function createSmallBubble() {
+    const baseX = width * 0.22 + 95;
+    const baseY = height * 0.52;
+
+    smallBubbles.push({
+      x: baseX,
+      y: baseY + (Math.random() - 0.5) * 25,
+      r: Math.random() * 12 + 10,
+      vx: Math.random() * 2.5 + 1.8,
+      vy: (Math.random() - 0.5) * 1.2,
+      life: 1,
+      targetX: target.x,
+      targetY: target.y
+    });
+  }
+
+  function updateSmallBubbles() {
+    if (Math.random() < 0.08) {
+      createSmallBubble();
+    }
+
+    smallBubbles.forEach(b => {
+      const dx = target.x - b.x;
+      const dy = target.y - b.y;
+
+      b.vx += dx * 0.0008;
+      b.vy += dy * 0.0008;
+
+      b.x += b.vx;
+      b.y += b.vy;
+
+      b.life -= 0.004;
+    });
+
+    smallBubbles = smallBubbles.filter(b => b.life > 0);
+  }
+
+  function drawSmallBubbles() {
+    smallBubbles.forEach(b => {
+      ctx.globalAlpha = b.life;
+      drawColorCircle(b.x, b.y, b.r, 2.5);
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  function drawFoamCluster() {
+    target.x += (mouse.x - target.x) * 0.04;
+    target.y += (mouse.y - target.y) * 0.04;
+
+    const cellSize = 34;
+    const radiusX = 170;
+    const radiusY = 115;
+
+    for (let row = -5; row <= 5; row++) {
+      for (let col = -7; col <= 7; col++) {
+        const offsetX = row % 2 === 0 ? 0 : cellSize * 0.5;
+
+        const x = target.x + col * cellSize + offsetX;
+        const y = target.y + row * cellSize * 0.86;
+
+        const dx = (x - target.x) / radiusX;
+        const dy = (y - target.y) / radiusY;
+        const d = dx * dx + dy * dy;
+
+        const edgeNoise = Math.sin(col * 1.7 + row * 2.3 + time * 0.02) * 0.16;
+
+        if (d < 1 + edgeNoise) {
+          const points = createHexagon(x, y, cellSize * 0.55, col + row);
+          drawColorPolygon(points, 3);
+        }
+      }
+    }
+
+    // 边缘较大的圆泡
+    drawColorCircle(target.x + radiusX * 0.55, target.y + 45, 60, 3);
+    drawColorCircle(target.x - radiusX * 0.7, target.y - 25, 28, 3);
+  }
+
+  function drawMiddleBubbles() {
+    const baseX = width * 0.22 + 130;
+    const baseY = height * 0.52;
+
+    for (let i = 0; i < 4; i++) {
+      const x = baseX + i * 52;
+      const y = baseY + Math.sin(time * 0.04 + i) * 12;
+      drawColorCircle(x, y, 16, 2.5);
+    }
+  }
+
+  function animate() {
+    time++;
+
+    ctx.clearRect(0, 0, width, height);
+
+    drawBlower();
+    drawMiddleBubbles();
+    drawFoamCluster();
+
+    updateSmallBubbles();
+    drawSmallBubbles();
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+</script>
+
+</body>
+</html>
