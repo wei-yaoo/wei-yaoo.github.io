@@ -6,12 +6,12 @@
     <title>My Channel - 魏瑶的个人网页</title>
 
     <style>
-        /* 1. 全局基础重置 */
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
         }
+
         body {
             font-family: 'Inter', "Microsoft YaHei", sans-serif;
             background: linear-gradient(135deg, #eef2ff, #f8fafc);
@@ -19,38 +19,37 @@
             line-height: 1.6;
         }
 
-        /* 2. 顶部大图巨幕区域 */
         .hero-section {
             position: relative;
-            height: 420px; 
-            /* 💡 完美对准你刚刚上传的 background.jpg */
+            height: 420px;
             background: url('background.jpg') no-repeat center center/cover;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             color: white;
-            /* 文本阴影，确保在亮色云朵背景下字迹清晰 */
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
         }
 
-        /* 顶部导航栏 */
         .navbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 25px 40px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.2), rgba(0,0,0,0));
+            background: linear-gradient(to bottom, rgba(0,0,0,0.35), rgba(0,0,0,0));
         }
+
         .nav-logo {
             font-size: 20px;
             font-weight: bold;
             letter-spacing: 0.5px;
         }
+
         .nav-links {
             display: flex;
             list-style: none;
             gap: 25px;
         }
+
         .nav-links a {
             color: white;
             text-decoration: none;
@@ -58,37 +57,85 @@
             font-weight: 500;
             transition: opacity 0.2s;
         }
+
         .nav-links a:hover {
             opacity: 0.8;
         }
 
-        /* 巨幕中心情感标语 */
         .hero-title-box {
             text-align: center;
-            margin-bottom: 95px; 
+            margin-bottom: 95px;
         }
+
         .hero-title {
             font-size: 42px;
             font-weight: 700;
             margin-bottom: 8px;
             letter-spacing: 1px;
         }
+
         .hero-subtitle {
             font-size: 16px;
             opacity: 0.95;
             letter-spacing: 0.5px;
         }
 
-        /* 3. 下半部分卡片重叠布局 */
+        /* 滚动图片缩放区域 */
+        .scroll-wrapper,
+        .scroll-content {
+            position: relative;
+            width: 100%;
+            z-index: 1;
+        }
+
+        .scroll-wrapper {
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .scroll-content {
+            overflow-x: hidden;
+        }
+
+        .scroll-content .scroll-section {
+            width: 100%;
+            height: 100vh;
+        }
+
+        .scroll-content .scroll-section.scroll-hero {
+            background-image: url('background.jpg');
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-size: cover;
+        }
+
+        .scroll-image-container {
+            width: 100%;
+            height: 100vh;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 2;
+            perspective: 500px;
+            overflow: hidden;
+        }
+
+        .scroll-image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
+        }
+
         .container {
             max-width: 950px;
-            margin: -55px auto 40px auto; /* 关键：负边距把白卡片往上提，压在背景大图上 */
+            margin: 40px auto 40px auto;
             padding: 0 20px;
             position: relative;
             z-index: 10;
         }
 
-        /* 白底主卡片 */
         .content-card {
             background-color: white;
             padding: 40px;
@@ -96,60 +143,33 @@
             box-shadow: 0 15px 35px rgba(0,0,0,0.07);
         }
 
-        /* 模块大标题 */
         .section-title {
             font-size: 26px;
             color: #111111;
             margin-bottom: 10px;
             font-weight: 700;
         }
+
         .section-divider {
             height: 2px;
             background-color: #f0f2f5;
             margin-bottom: 35px;
         }
 
-        /* 左右双栏网格排版 */
         .profile-grid {
             display: grid;
-            grid-template-columns: 1fr 1.2fr; /* 左边图片和右边文字的比例 */
+            grid-template-columns: 1fr 1.2fr;
             gap: 45px;
             align-items: start;
         }
 
-        /* ========================================================
-           ✨ 【重点修改：弹出头像与语音框复合容器】 ✨
-           ======================================================== */
-        .avatar-container {
-            position: relative;
-            width: 100%;
-            padding-top: 25px; /* 预留顶部空间，供头像向上弹出 */
-        }
-
         .avatar-box {
             position: relative;
-            width: 100%;
             border-radius: 14px;
-            /* 💡 overflow 改为 visible 允许头像图片弹出盒子边界 */
-            overflow: visible; 
-            /* 基础微光外边框阴影 */
-            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.08), 0 4px 12px rgba(0,0,0,0.03);
-            /* 平滑过渡动画时间 */
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.1), 0 4px 12px rgba(0,0,0,0.05);
             transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-            /* 默认自带一个极其轻微的呼吸效果 */
             animation: avatarBreath 6s ease-in-out infinite alternate;
-        }
-
-        /* 💡 增加一个底层的浅色背景框，固守原位，让弹出对比更强烈 */
-        .avatar-box::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: #fdf6ec; 
-            border-radius: 14px;
-            border: 2px solid rgba(79, 70, 229, 0.15);
-            z-index: 1;
-            pointer-events: none;
         }
 
         .avatar-box img {
@@ -157,110 +177,42 @@
             height: auto;
             border-radius: 14px;
             display: block;
-            position: relative;
-            z-index: 2;
-            transform-origin: bottom center; /* 从底部向上放大弹出 */
-            /* 采用带弹性手感的贝塞尔曲线 */
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
 
-        /* 💡 悬停交互魔法：当鼠标放上去时 */
-        .avatar-container:hover .avatar-box {
-            /* 盒子整体微微阴影加深 */
-            box-shadow: 0 20px 40px rgba(79, 70, 229, 0.15), 0 10px 20px rgba(0,0,0,0.06);
+        .avatar-box:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 35px rgba(79, 70, 229, 0.18), 0 10px 20px rgba(0,0,0,0.08);
         }
 
-        .avatar-container:hover .avatar-box img {
-            /* 2. 内部人物平滑向上位移并放大，达成“弹出来”的视差立体感 */
-            transform: scale(1.1) translateY(-20px);
+        .avatar-box:hover img {
+            transform: scale(1.05);
         }
 
-        /* 💬 欢迎语音框基础样式 */
-        .speech-bubble {
-            position: absolute;
-            top: 0px;
-            right: -60px; /* 定位在头像右侧偏上交界处 */
-            background: #ffffff;
-            border: 2.5px solid #4f46e5;
-            border-radius: 14px;
-            padding: 8px 14px;
-            /* 潮流纸片风的高级硬阴影 */
-            box-shadow: 4px 4px 0px #4f46e5;
-            z-index: 10;
-            pointer-events: none; /* 鼠标可以直接穿透它触发头像交互 */
-            
-            /* 默认完全隐藏状态（缩小到0、透明） */
-            opacity: 0;
-            transform: scale(0) translate(-10px, 10px);
-            transform-origin: bottom left; /* 从左下角（靠近头像的方向）弹出来 */
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        /* 语音框的左下角小指针三角形 */
-        .speech-bubble::after {
-            content: '';
-            position: absolute;
-            bottom: -10px;
-            left: 20px;
-            width: 0; height: 0;
-            border-style: solid;
-            border-width: 10px 10px 0 0;
-            border-color: #ffffff transparent transparent transparent;
-            z-index: 2;
-        }
-        .speech-bubble::before {
-            content: '';
-            position: absolute;
-            bottom: -13.5px;
-            left: 18.5px;
-            width: 0; height: 0;
-            border-style: solid;
-            border-width: 12px 12px 0 0;
-            border-color: #4f46e5 transparent transparent transparent;
-            z-index: 1;
-        }
-
-        .speech-bubble p {
-            margin: 0;
-            font-size: 13px;
-            font-weight: 700;
-            color: #4f46e5;
-            white-space: nowrap; /* 确保文字在一行内不换行 */
-            letter-spacing: 0.5px;
-        }
-
-        /* 💡 悬停时：语音框丝滑淡入并扩展弹出 */
-        .avatar-container:hover .speech-bubble {
-            opacity: 1;
-            transform: scale(1) translate(0, 0);
-            /* 稍微延迟 0.1 秒弹出，让动态效果呈现先后错落的节奏感 */
-            transition-delay: 0.1s;
-        }
-
-        /* 3. 循环自启动的微弱呼吸小动画，让网页不呆板 */
         @keyframes avatarBreath {
             0% {
                 transform: scale(1);
             }
             100% {
-                transform: scale(1.01) translateY(-1px);
+                transform: scale(1.015) translateY(-2px);
+                box-shadow: 0 12px 28px rgba(79, 70, 229, 0.13), 0 6px 14px rgba(0,0,0,0.06);
             }
         }
-        /* ======================================================== */
 
-        /* 右栏：细腻文字排版 */
         .info-box h3 {
             font-size: 32px;
             font-weight: 700;
             color: #111111;
             margin-bottom: 6px;
         }
+
         .info-tagline {
             font-size: 15px;
-            color: #ff4757; /* 亮眼的小字标签 */
+            color: #ff4757;
             font-weight: 600;
             margin-bottom: 22px;
         }
+
         .info-text {
             font-size: 15px;
             color: #555555;
@@ -268,7 +220,6 @@
             text-align: justify;
         }
 
-        /* 漂亮的小标签式兴趣列表 */
         h4 {
             color: #4f46e5;
             margin-top: 28px;
@@ -276,6 +227,7 @@
             font-size: 16px;
             font-weight: 600;
         }
+
         .interests-tags {
             list-style: none;
             padding: 0;
@@ -283,6 +235,7 @@
             flex-wrap: wrap;
             gap: 12px;
         }
+
         .interests-tags li {
             background: #f1f2f6;
             padding: 6px 16px;
@@ -293,21 +246,19 @@
             transition: all 0.2s;
             cursor: default;
         }
-        /* 让你的小兴趣标签也能动 */
+
         .interests-tags li:hover {
             background: #4f46e5;
             color: white;
             transform: scale(1.05);
         }
 
-        /* 联系方式 */
         .contact-text {
             font-size: 15px;
             color: #444444;
             font-weight: 500;
         }
 
-        /* 页脚 */
         .footer {
             text-align: center;
             margin-top: 45px;
@@ -315,27 +266,30 @@
             font-size: 13px;
         }
 
-        /* 移动端完美自适应：手机访问自动变成上下单栏 */
         @media (max-width: 768px) {
             .profile-grid {
                 grid-template-columns: 1fr;
                 gap: 30px;
             }
+
             .hero-section {
                 height: 340px;
             }
+
             .hero-title {
                 font-size: 32px;
             }
+
             .navbar {
                 padding: 15px 20px;
             }
-            /* 手机端取消hover位移和语音框弹出，避免移动端长按出bug，保留轻微呼吸即可 */
-            .avatar-container:hover .avatar-box img {
+
+            .avatar-box:hover {
                 transform: none;
             }
-            .avatar-container:hover .speech-bubble {
-                display: none;
+
+            .avatar-box:hover img {
+                transform: none;
             }
         }
     </style>
@@ -360,27 +314,33 @@
         </div>
     </header>
 
+    <!-- 滚动图片缩放效果区域 -->
+    <div class="scroll-wrapper">
+        <div class="scroll-content">
+            <section class="scroll-section scroll-hero"></section>
+        </div>
+
+        <div class="scroll-image-container">
+            <img src="background.jpg" alt="背景图">
+        </div>
+    </div>
+
     <div class="container">
         <div class="content-card">
-            
+
             <h2 class="section-title">About Me</h2>
             <div class="section-divider"></div>
 
             <div class="profile-grid">
-                
-                <div class="avatar-container">
-                    <div class="avatar-box">
-                        <img src="avatar.jpg" alt="魏瑶的卡通头像">
-                    </div>
-                    <div class="speech-bubble">
-                        <p>欢迎你来到我的网页！✨</p>
-                    </div>
+
+                <div class="avatar-box">
+                    <img src="avatar.jpg" alt="魏瑶的卡通头像">
                 </div>
 
                 <div class="info-box">
                     <h3>魏瑶 (Siri)</h3>
                     <p class="info-tagline">(努力学习版 活跃版 快乐版)</p>
-                    
+
                     <p class="info-text">Hello，我是一个普通的工业设计工程学生。欢迎来到我的个人频道！</p>
                     <p class="info-text">我喜欢天马行空的幻想，致力于用现代设计手法把有趣的想法带进首饰。本身并不是个绝对的 cute girl，我更努力想成为一个 cool girl。时常安静时常发疯是我的日常，反正开心就好了！</p>
 
@@ -403,6 +363,43 @@
             <p>&copy; 2026 我的个人网页 | Powered by GitHub Pages</p>
         </div>
     </div>
+
+    <!-- GSAP 动效工具，不需要下载 -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3/dist/ScrollTrigger.min.js"></script>
+
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        window.addEventListener("load", () => {
+            gsap
+                .timeline({
+                    scrollTrigger: {
+                        trigger: ".scroll-wrapper",
+                        start: "top top",
+                        end: "+=150%",
+                        pin: true,
+                        scrub: true,
+                        markers: false
+                    }
+                })
+                .to(".scroll-image-container img", {
+                    scale: 2,
+                    z: 350,
+                    transformOrigin: "center center",
+                    ease: "power1.inOut"
+                })
+                .to(
+                    ".scroll-section.scroll-hero",
+                    {
+                        scale: 1.1,
+                        transformOrigin: "center center",
+                        ease: "power1.inOut"
+                    },
+                    "<"
+                );
+        });
+    </script>
 
 </body>
 </html>
