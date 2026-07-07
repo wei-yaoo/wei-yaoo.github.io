@@ -1,1 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WELCOME 文字交互效果</title>
 
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background: #fff4df;
+    }
+
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Three.js，不需要下载，直接联网调用 -->
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+
+  <script>
+    /*
+      这里是文字图片生成区域
+      想改文字，只改这一行的 WELCOME 即可
+    */
+    const mainTexture = createTextTexture("WELCOME", false);
+    const shadowTexture = createTextTexture("WELCOME", true);
+
+    function createTextTexture(text, isShadow) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 2048;
+      canvas.height = 2048;
+
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      let fontSize = 310;
+      ctx.font = "900 " + fontSize + "px Arial Black, Impact, Arial, sans-serif";
+
+      while (ctx.measureText(text).width > 1450) {
+        fontSize -= 10;
+        ctx.font = "900 " + fontSize + "px Arial Black, Impact, Arial, sans-serif";
+      }
+
+      if (isShadow) {
+        ctx.filter = "blur(28px)";
+        ctx.fillStyle = "rgba(255, 117, 64, 0.28)";
+        ctx.fillText(text, 55, 55);
+
+        ctx.filter = "blur(18px)";
+        ctx.fillStyle = "rgba(0, 0, 0, 0.18)";
+        ctx.fillText(text, 35, 42);
+      } else {
+        ctx.lineJoin = "round";
+        ctx.lineCap = "round";
+
+        // 红蓝错位描边，形成图二那种双色边缘感
+        ctx.lineWidth = 34;
+        ctx.strokeStyle = "#ff3150";
+        ctx.strokeText(text, 20, 18);
+
+        ctx.strokeStyle = "#006dff";
+        ctx.strokeText(text, -20, -18);
+
+        // 第二层细描边，让字体更立体
+        ctx.lineWidth = 18;
+        ctx.strokeStyle = "#ff4b5f";
+        ctx.strokeText(text, 10, 10);
+
+        ctx.strokeStyle = "#1694ff";
+        ctx.strokeText(text, -10, -10);
+
+        // 深蓝主文字
+        ctx.fillStyle = "#071b78";
+        ctx.fillText(text, 0, 0);
+
+        // 顶部一点点亮边
+        ctx.lineWidth = 5;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+        ctx.strokeText(text, -4, -6);
+      }
+
+      ctx.restore();
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.needsUpdate = true;
+      return texture;
+    }
+
+    var scene = new THREE.Scene();
+
+    let aspect = window.innerWidth / window.innerHeight;
+    let camera_distance = 8;
+
+    const camera = new THREE.OrthographicCamera(
+      -camera_distance * aspect,
+      camera_distance * aspect,
+      camera_distance,
+      -camera_distance,
+      0.01,
+      1000
+    );
+
+    camera.position.set(0, -10, 5);
+    camera.lookAt(0, 0, 0);
+
+    var renderer = new THREE.WebGLRenderer({
+      antialias: true,
+      alpha: false
+    });
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    document.body.appendChild(renderer.domElement);
+
+    // 背景色：参考图二的奶油色
+    scene.background = new THREE.Color(0xfff4df);
+
+    /////////////////////////////////////////////
+    // 鼠标影响点
+    const geometry_sphere = new THREE.SphereGeometry(0.25, 32, 16);
+    const material_sphere = new THREE.MeshBasicMaterial({
+      color: 0xff0000,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false
+    });
+
+    const sphere = new THREE.Mesh(geometry_sphere, material_sphere);
+    scene.add(sphere);
+
+    /////////////////////////////////////////////
+    // 鼠标检测区域
+    var geometry_hit = new THREE.PlaneGeometry(500, 500, 10, 10);
+    const material_hit = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      opacity: 0,
+      depthWrite: false
+    });
+
+    var hit = new THREE.Mesh(geometry_hit, material_hit);
+    hit.name = "hit";
+    scene.add(hit);
+
+    //////////////////////////////////////////////
+    // 主文字平面
+    var geometry = new THREE.PlaneGeometry(15, 15, 160, 160);
+
+    let shader_material = new THREE.ShaderMaterial({
+      uniforms: {
+        uTexture: {
+          type: "t",
+          value: mainTexture
+        },
+        uDisplacement: {
+          value: new THREE.Vector3(0, 0, 0)
+        }
+      },
+
+      vertexShader: `
+        varying vec2 vUv;
+        uniform vec3 uDisplacement;
+
+        float easeInOutCubic(float x) {
+          return x < 0.5 ? 4. * x * x * x : 1. - pow(-2. * x + 2., 3.) / 2.;
+        }
+
+        float map(float value, float min1, float max1, float min2, float max2) {
+          return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+        }
+
+        void main() {
+          vUv = uv;
+          vec3 new_position = position;
+
+          vec4 localPosition = vec4(position, 1.);
+          vec4 worldPosition = modelMatrix * localPosition;
+
+          float dist = length(uDisplacement - worldPosition.rgb);
+          float min_distance = 3.0;
+
+          if (dist < min_distance) {
+            float distance_mapped = map(dist, 0., min_distance, 1., 0.);
+            float val = easeInOutCubic(distance_mapped) * 1.2;
+            new_position.z += val;
+          }
+
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(new_position, 1.0);
+        }
+      `,
+
+      fragmentShader: `
+        varying vec2 vUv;
+        uniform sampler2D uTexture;
+
+        void main() {
+          vec4 color = texture2D(uTexture, vUv);
+          gl_FragColor = vec4(color);
+        }
+      `,
+
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+
+    var plane = new THREE.Mesh(geometry, shader_material);
+    plane.rotation.z = Math.PI / 4;
+    plane.renderOrder = 2;
+    scene.add(plane);
+
+    //////////////////////////////////////////////
+    // 阴影平面
+    let shader_material_shadow = new THREE.ShaderMaterial({
+      uniforms: {
+        uTexture: {
+          type: "t",
+          value: shadowTexture
+        },
+        uDisplacement: {
+          value: new THREE.Vector3(0, 0, 0)
+        }
+      },
+
+      vertexShader: `
+        varying vec2 vUv;
+        varying float dist;
+        uniform vec3 uDisplacement;
+
+        void main() {
+          vUv = uv;
+
+          vec4 localPosition = vec4(position, 1.);
+          vec4 worldPosition = modelMatrix * localPosition;
+          dist = length(uDisplacement - worldPosition.rgb);
+
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+
+      fragmentShader: `
+        varying vec2 vUv;
+        varying float dist;
+        uniform sampler2D uTexture;
+
+        float map(float value, float min1, float max1, float min2, float max2) {
+          return min2 + (value - min1) * (max2 - min2) / (max1 - min1);
+        }
+
+        void main() {
+          vec4 color = texture2D(uTexture, vUv);
+          float min_distance = 3.0;
+
+          if (dist < min_distance) {
+            float alpha = map(dist, min_distance, 0., color.a, 0.);
+            color.a = alpha;
+          }
+
+          gl_FragColor = vec4(color);
+        }
+      `,
+
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide
+    });
+
+    var plane_shadow = new THREE.Mesh(geometry, shader_material_shadow);
+    plane_shadow.rotation.z = Math.PI / 4;
+    plane_shadow.position.z = -0.02;
+    plane_shadow.renderOrder = 1;
+    scene.add(plane_shadow);
+
+    //////////////////////////////////////////////////
+
+    window.addEventListener("resize", onWindowResize);
+
+    const raycaster = new THREE.Raycaster();
+    const pointer = new THREE.Vector2();
+
+    window.addEventListener("pointermove", onPointerMove);
+
+    function onPointerMove(event) {
+      pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
+      pointer.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(pointer, camera);
+      const intersects = raycaster.intersectObject(hit);
+
+      if (intersects.length > 0) {
+        sphere.position.set(
+          intersects[0].point.x,
+          intersects[0].point.y,
+          intersects[0].point.z
+        );
+
+        shader_material.uniforms.uDisplacement.value = sphere.position;
+        shader_material_shadow.uniforms.uDisplacement.value = sphere.position;
+      }
+    }
+
+    function render() {
+      requestAnimationFrame(render);
+      renderer.render(scene, camera);
+    }
+
+    render();
+
+    function onWindowResize() {
+      aspect = window.innerWidth / window.innerHeight;
+
+      camera.left = -camera_distance * aspect;
+      camera.right = camera_distance * aspect;
+      camera.top = camera_distance;
+      camera.bottom = -camera_distance;
+
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+  </script>
+
+</body>
+</html>
