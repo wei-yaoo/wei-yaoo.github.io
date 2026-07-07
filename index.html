@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Inter', "Microsoft YaHei", sans-serif;
-            background: linear-gradient(180deg, #080808 0%, #fff4df 45%, #f8fafc 100%);
+            background: linear-gradient(135deg, #eef2ff, #f8fafc);
             color: #333333;
             line-height: 1.6;
         }
@@ -28,37 +28,28 @@
             flex-direction: column;
             justify-content: space-between;
             color: white;
-            overflow: hidden;
-        }
-
-        .hero-section::before {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background:
-                linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0.25), rgba(0,0,0,0.85)),
-                radial-gradient(circle at center, rgba(255,255,255,0.08), rgba(0,0,0,0.3));
-            z-index: 1;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
         }
 
         .hero-section::after {
             content: "";
             position: absolute;
             left: 0;
-            bottom: -1px;
+            bottom: 0;
             width: 100%;
-            height: 120px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0), #fff4df);
-            z-index: 2;
+            height: 140px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0), #050505);
+            z-index: 1;
         }
 
         .navbar {
             position: relative;
-            z-index: 3;
+            z-index: 2;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 28px 44px;
+            padding: 28px 42px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0));
         }
 
         .nav-logo {
@@ -82,19 +73,18 @@
         }
 
         .nav-links a:hover {
-            opacity: 0.75;
+            opacity: 0.8;
         }
 
         .hero-title-box {
             position: relative;
-            z-index: 3;
+            z-index: 2;
             text-align: center;
-            margin-bottom: 125px;
-            text-shadow: 0 4px 18px rgba(0, 0, 0, 0.55);
+            margin-bottom: 105px;
         }
 
         .hero-title {
-            font-size: 52px;
+            font-size: 48px;
             font-weight: 800;
             margin-bottom: 10px;
             letter-spacing: 1px;
@@ -106,104 +96,25 @@
             letter-spacing: 0.5px;
         }
 
-        /* 中间过渡介绍区 */
-        .bridge-section {
-            background: #fff4df;
-            padding: 70px 20px 30px;
-            text-align: center;
-        }
-
-        .bridge-label {
-            display: inline-block;
-            padding: 8px 18px;
-            border-radius: 999px;
-            background: rgba(79, 70, 229, 0.08);
-            color: #4f46e5;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            margin-bottom: 18px;
-        }
-
-        .bridge-title {
-            font-size: 42px;
-            color: #111111;
-            font-weight: 800;
-            margin-bottom: 14px;
-        }
-
-        .bridge-text {
-            max-width: 720px;
-            margin: 0 auto;
-            color: #666666;
-            font-size: 16px;
-            line-height: 1.9;
-        }
-
-        /* WELCOME 动效展示区 */
+        /* WELCOME 文字交互效果区域 */
         .text-effect-section {
-            background: #fff4df;
-            padding: 35px 20px 90px;
-        }
-
-        .effect-card {
-            max-width: 1180px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.55);
-            border: 1px solid rgba(255, 255, 255, 0.75);
-            border-radius: 32px;
-            overflow: hidden;
-            box-shadow: 0 24px 70px rgba(70, 50, 20, 0.12);
-            backdrop-filter: blur(10px);
-        }
-
-        .effect-card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 24px 32px;
-            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-        }
-
-        .effect-card-title {
-            font-size: 20px;
-            font-weight: 800;
-            color: #111111;
-        }
-
-        .effect-card-desc {
-            color: #777777;
-            font-size: 14px;
-            margin-top: 4px;
-        }
-
-        .effect-pill {
-            padding: 8px 14px;
-            border-radius: 999px;
-            background: #111111;
-            color: white;
-            font-size: 13px;
-            font-weight: 600;
-            white-space: nowrap;
-        }
-
-        .iframe-wrap {
-            height: 520px;
-            background: #fff4df;
+            width: 100%;
+            height: 540px;
+            background: linear-gradient(180deg, #050505 0%, #201713 8%, #fff4df 26%, #fff4df 100%);
             overflow: hidden;
         }
 
-        .iframe-wrap iframe {
+        .text-effect-section iframe {
             width: 100%;
             height: 100%;
             border: none;
             display: block;
         }
 
-        /* 个人信息区域 */
+        /* About Me 内容区域 */
         .container {
             max-width: 950px;
-            margin: -35px auto 40px auto;
+            margin: -20px auto 40px auto;
             padding: 0 20px;
             position: relative;
             z-index: 10;
@@ -211,16 +122,16 @@
 
         .content-card {
             background-color: white;
-            padding: 42px;
-            border-radius: 24px;
-            box-shadow: 0 20px 45px rgba(0,0,0,0.08);
+            padding: 40px;
+            border-radius: 18px;
+            box-shadow: 0 18px 45px rgba(0,0,0,0.08);
         }
 
         .section-title {
-            font-size: 28px;
+            font-size: 26px;
             color: #111111;
             margin-bottom: 10px;
-            font-weight: 800;
+            font-weight: 700;
         }
 
         .section-divider {
@@ -238,7 +149,7 @@
 
         .avatar-box {
             position: relative;
-            border-radius: 18px;
+            border-radius: 14px;
             overflow: hidden;
             box-shadow: 0 8px 25px rgba(79, 70, 229, 0.1), 0 4px 12px rgba(0,0,0,0.05);
             transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
@@ -248,7 +159,7 @@
         .avatar-box img {
             width: 100%;
             height: auto;
-            border-radius: 18px;
+            border-radius: 14px;
             display: block;
             transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
@@ -274,7 +185,7 @@
 
         .info-box h3 {
             font-size: 32px;
-            font-weight: 800;
+            font-weight: 700;
             color: #111111;
             margin-bottom: 6px;
         }
@@ -298,7 +209,7 @@
             margin-top: 28px;
             margin-bottom: 12px;
             font-size: 16px;
-            font-weight: 700;
+            font-weight: 600;
         }
 
         .interests-tags {
@@ -336,7 +247,7 @@
             display: inline-block;
             margin-top: 25px;
             padding: 10px 18px;
-            background: #4f46e5;
+            background: #111111;
             color: white;
             text-decoration: none;
             border-radius: 999px;
@@ -346,7 +257,7 @@
         }
 
         .effect-link:hover {
-            background: #3730a3;
+            background: #4f46e5;
             transform: translateY(-2px);
         }
 
@@ -358,16 +269,25 @@
         }
 
         @media (max-width: 768px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
             .hero-section {
-                height: 380px;
+                height: 420px;
+            }
+
+            .hero-title {
+                font-size: 34px;
+            }
+
+            .hero-subtitle {
+                font-size: 15px;
             }
 
             .navbar {
-                padding: 18px 20px;
-            }
-
-            .nav-logo {
-                font-size: 18px;
+                padding: 18px 22px;
             }
 
             .nav-links {
@@ -378,35 +298,12 @@
                 font-size: 12px;
             }
 
-            .hero-title {
-                font-size: 34px;
-            }
-
-            .hero-title-box {
-                margin-bottom: 90px;
-            }
-
-            .bridge-title {
-                font-size: 30px;
-            }
-
-            .effect-card-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 14px;
-            }
-
-            .iframe-wrap {
+            .text-effect-section {
                 height: 420px;
             }
 
-            .profile-grid {
-                grid-template-columns: 1fr;
-                gap: 30px;
-            }
-
-            .content-card {
-                padding: 28px;
+            .container {
+                margin-top: -10px;
             }
 
             .avatar-box:hover {
@@ -439,29 +336,9 @@
         </div>
     </header>
 
-    <section class="bridge-section">
-        <span class="bridge-label">INTERACTIVE SPACE</span>
-        <h2 class="bridge-title">Welcome to My Creative Channel</h2>
-        <p class="bridge-text">
-            这里是我的个人创意频道。我希望把视觉设计、交互效果和自己的生活态度连接起来，
-            让网页不只是展示信息，也能像一个有趣的入口，带你进入我的设计世界。
-        </p>
-    </section>
-
+    <!-- WELCOME 文字交互效果区域 -->
     <section class="text-effect-section">
-        <div class="effect-card">
-            <div class="effect-card-header">
-                <div>
-                    <div class="effect-card-title">WELCOME 文字交互实验</div>
-                    <div class="effect-card-desc">移动鼠标，感受文字被轻轻顶起的 Three.js 动效</div>
-                </div>
-                <div class="effect-pill">Three.js / Interactive Text</div>
-            </div>
-
-            <div class="iframe-wrap">
-                <iframe src="text-effect.html" title="WELCOME 文字交互效果"></iframe>
-            </div>
-        </div>
+        <iframe src="text-effect.html" title="WELCOME 文字交互效果"></iframe>
     </section>
 
     <div class="container">
@@ -493,7 +370,7 @@
                     <h4>联系方式 / Contact</h4>
                     <p class="contact-text">📧 邮箱：2544393568@qq.com</p>
 
-                    <a class="effect-link" href="text-effect.html">单独查看 WELCOME 文字动效</a>
+                    <a class="effect-link" href="text-effect.html">查看 WELCOME 文字动效</a>
                 </div>
 
             </div>
