@@ -3,652 +3,598 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Bubble Honeycomb Effect</title>
+  <title>Bubble Interaction</title>
 
   <style>
-    html,
-    body {
+    html, body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #f2f2f2;
-      font-family: Arial, sans-serif;
+      background: #ececec;
+      font-family: Arial, "Microsoft YaHei", sans-serif;
     }
 
     canvas {
       display: block;
       width: 100vw;
       height: 100vh;
-      background: #f2f2f2;
-      cursor: default;
     }
   </style>
 </head>
-
 <body>
+  <canvas id="bubbleCanvas"></canvas>
 
-<canvas id="canvas"></canvas>
+  <script>
+    const canvas = document.getElementById("bubbleCanvas");
+    const ctx = canvas.getContext("2d");
 
-<script>
-  const canvas = document.getElementById("canvas");
-  const ctx = canvas.getContext("2d");
+    let W = 0;
+    let H = 0;
+    let animationId = null;
 
-  let W = window.innerWidth;
-  let H = window.innerHeight;
+    const rainbow = [
+      "#2136b6",
+      "#2d63ff",
+      "#21c8ff",
+      "#34c759",
+      "#9ad22b",
+      "#ff9f0a",
+      "#ff5e8a",
+      "#d94bff"
+    ];
 
-  canvas.width = W;
-  canvas.height = H;
+    function resizeCanvas() {
+      W = canvas.width = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      buildSlots();
+    }
 
-  const colors = [
-    "#14148f",
-    "#304ffe",
-    "#00a7ff",
-    "#12b886",
-    "#6acb28",
-    "#ff9500",
-    "#ff3b82",
-    "#9b3cff"
-  ];
+    function dist(x1, y1, x2, y2) {
+      return Math.hypot(x2 - x1, y2 - y1);
+    }
 
-  const bubbles = [];
-  const flyingBubbles = [];
-  const swingBubbles = [];
-  const particles = [];
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
 
-  const occupiedSlots = new Set();
-  let slots = [];
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
 
-  const CELL_R = 18;
-  const MAX_BUBBLES = 260;
-  const SPAWN_INTERVAL = 260;
+    function rotatePoint(px, py, cx, cy, angle) {
+      const s = Math.sin(angle);
+      const c = Math.cos(angle);
+      const x = px - cx;
+      const y = py - cy;
+      return {
+        x: x * c - y * s + cx,
+        y: x * s + y * c + cy
+      };
+    }
 
-  let lastSpawn = 0;
-  let lastSwingSpawn = 0;
-  let time = 0;
+    const mouse = {
+      x: 0,
+      y: 0,
+      down: false
+    };
 
-  const cluster = {
-    x: W * 0.66,
-    y: H * 0.48
-  };
+    let draggingTarget = null;
 
-  const nozzle = {
-    x: W * 0.24,
-    y: H * 0.52,
-    lastX: W * 0.24,
-    lastY: H * 0.52,
-    vx: 0,
-    vy: 0
-  };
+    /* ========= 喷嘴（采用图二样式，只留一个） ========= */
+    const nozzle = {
+      x: 210,
+      y: 240,
+      angle: -0.2,
+      dragOffsetX: 0,
+      dragOffsetY: 0,
+      lastX: 210,
+      lastY: 240,
+      speed: 0
+    };
 
-  const pin = {
-    x: W * 0.20,
-    y: H * 0.78
-  };
+    /* ========= 炸泡泡的针 ========= */
+    const pin = {
+      x: 180,
+      y: 430,
+      angle: -0.25,
+      dragOffsetX: 0,
+      dragOffsetY: 0
+    };
 
-  let dragTarget = null;
-  let dragOffsetX = 0;
-  let dragOffsetY = 0;
+    /* ========= 泡泡数据 ========= */
+    let bubbles = [];
+    let particles = [];
+    let bubbleIdSeed = 0;
+    let slots = [];
+    let lastEmitTime = 0;
 
-  function resizeCanvas() {
-    W = window.innerWidth;
-    H = window.innerHeight;
-    canvas.width = W;
-    canvas.height = H;
+    /* ========= 堆积区域 ========= */
+    function buildSlots() {
+      slots = [];
 
-    cluster.x = W * 0.66;
-    cluster.y = H * 0.48;
+      const centerX = W * 0.72;
+      const centerY = H * 0.50;
+      const rx = Math.min(230, W * 0.22);
+      const ry = Math.min(220, H * 0.30);
+      const spacing = 26;
 
-    rebuildSlots();
-  }
+      let rowIndex = 0;
 
-  window.addEventListener("resize", resizeCanvas);
+      for (let y = -ry; y <= ry; y += spacing * 0.92) {
+        const offset = rowIndex % 2 === 0 ? 0 : spacing * 0.43;
 
-  function clamp(value, min, max) {
-    return Math.max(min, Math.min(max, value));
-  }
+        for (let x = -rx; x <= rx; x += spacing * 0.86) {
+          const px = x + offset;
 
-  function distance(x1, y1, x2, y2) {
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    return Math.sqrt(dx * dx + dy * dy);
-  }
+          const nx = px / rx;
+          const ny = y / ry;
 
-  function random(min, max) {
-    return Math.random() * (max - min) + min;
-  }
+          const shape = nx * nx * 0.92 + ny * ny * 1.02;
 
-  function easeOutCubic(t) {
-    return 1 - Math.pow(1 - t, 3);
-  }
+          if (shape < 1) {
+            slots.push({
+              x: centerX + px,
+              y: centerY + y,
+              used: false,
+              bubbleId: null,
+              order: (centerX + px) + Math.abs(y) * 0.16
+            });
+          }
+        }
 
-  function getRainbowStroke(x, y, r) {
-    const g = ctx.createLinearGradient(x - r, y - r, x + r, y + r);
-    g.addColorStop(0.00, "#14148f");
-    g.addColorStop(0.18, "#304ffe");
-    g.addColorStop(0.34, "#00a7ff");
-    g.addColorStop(0.50, "#12b886");
-    g.addColorStop(0.66, "#ff9500");
-    g.addColorStop(0.82, "#ff3b82");
-    g.addColorStop(1.00, "#9b3cff");
-    return g;
-  }
+        rowIndex++;
+      }
 
-  function rebuildSlots() {
-    slots = [];
+      slots.sort((a, b) => a.order - b.order);
+    }
 
-    const radiusX = Math.min(W * 0.28, 340);
-    const radiusY = Math.min(H * 0.34, 210);
+    function getFreeSlot() {
+      for (let i = 0; i < slots.length; i++) {
+        if (!slots[i].used) return slots[i];
+      }
+      return null;
+    }
 
-    const dx = CELL_R * Math.sqrt(3);
-    const dy = CELL_R * 1.5;
+    function releaseSlot(bubble) {
+      if (!bubble.slot) return;
+      bubble.slot.used = false;
+      bubble.slot.bubbleId = null;
+      bubble.slot = null;
+    }
 
-    let id = 0;
+    /* ========= 图形绘制 ========= */
+    function createRainbowGradient(x, y, r) {
+      const g = ctx.createLinearGradient(x - r, y - r, x + r, y + r);
+      g.addColorStop(0.00, rainbow[0]);
+      g.addColorStop(0.14, rainbow[1]);
+      g.addColorStop(0.28, rainbow[2]);
+      g.addColorStop(0.42, rainbow[3]);
+      g.addColorStop(0.58, rainbow[4]);
+      g.addColorStop(0.72, rainbow[5]);
+      g.addColorStop(0.86, rainbow[6]);
+      g.addColorStop(1.00, rainbow[7]);
+      return g;
+    }
 
-    for (let row = -10; row <= 10; row++) {
-      for (let col = -15; col <= 15; col++) {
-        const offsetX = row % 2 === 0 ? 0 : dx / 2;
+    /* 柔和一点的泡泡轮廓 */
+    function drawSoftBubble(b) {
+      const sides = 8;
+      const points = [];
 
-        const x = cluster.x + col * dx + offsetX;
-        const y = cluster.y + row * dy;
+      for (let i = 0; i < sides; i++) {
+        const ang = b.rot + (Math.PI * 2 / sides) * i;
+        const rr = b.r * (0.92 + 0.08 * Math.sin(b.wobble + i * 0.9));
+        points.push({
+          x: b.x + Math.cos(ang) * rr,
+          y: b.y + Math.sin(ang) * rr
+        });
+      }
 
-        const nx = (x - cluster.x) / radiusX;
-        const ny = (y - cluster.y) / radiusY;
+      ctx.save();
 
-        const organicEdge =
-          Math.sin(col * 1.2 + row * 1.8) * 0.12 +
-          Math.cos(col * 0.8 - row * 1.5) * 0.08;
+      const grad = createRainbowGradient(b.x, b.y, b.r * 1.2);
 
-        if (nx * nx + ny * ny < 1.05 + organicEdge) {
-          slots.push({
-            id: id++,
-            x,
-            y,
-            row,
-            col
-          });
+      ctx.beginPath();
+
+      for (let i = 0; i < points.length; i++) {
+        const current = points[i];
+        const next = points[(i + 1) % points.length];
+        const midX = (current.x + next.x) * 0.5;
+        const midY = (current.y + next.y) * 0.5;
+
+        if (i === 0) {
+          const prev = points[points.length - 1];
+          const startX = (prev.x + current.x) * 0.5;
+          const startY = (prev.y + current.y) * 0.5;
+          ctx.moveTo(startX, startY);
+        }
+
+        ctx.quadraticCurveTo(current.x, current.y, midX, midY);
+      }
+
+      ctx.closePath();
+      ctx.lineWidth = 2.2;
+      ctx.strokeStyle = grad;
+      ctx.stroke();
+
+      ctx.globalAlpha = 0.08;
+      ctx.fillStyle = "#ffffff";
+      ctx.fill();
+      ctx.globalAlpha = 1;
+
+      ctx.restore();
+    }
+
+    function drawParticles() {
+      particles.forEach(p => {
+        ctx.save();
+        ctx.globalAlpha = p.life / p.maxLife;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.fill();
+        ctx.restore();
+      });
+    }
+
+    /* 喷嘴：采用图二样式 */
+    function drawNozzle() {
+      ctx.save();
+      ctx.translate(nozzle.x, nozzle.y);
+      ctx.rotate(nozzle.angle);
+
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#1d2ea8";
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+
+      /* 圆环 */
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 16, 24, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      /* 手柄 */
+      ctx.beginPath();
+      ctx.moveTo(-3, 22);
+      ctx.lineTo(-18, 62);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    /* 针 */
+    function drawPin() {
+      ctx.save();
+      ctx.translate(pin.x, pin.y);
+      ctx.rotate(pin.angle);
+
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#1d2ea8";
+      ctx.lineJoin = "round";
+      ctx.lineCap = "round";
+
+      ctx.beginPath();
+      ctx.moveTo(-4, -10);
+      ctx.lineTo(12, 0);
+      ctx.lineTo(-4, 10);
+      ctx.closePath();
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(-4, 0);
+      ctx.lineTo(-28, 0);
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function getNozzleTip() {
+      const localTip = { x: 18, y: 0 };
+      const p = rotatePoint(
+        nozzle.x + localTip.x,
+        nozzle.y + localTip.y,
+        nozzle.x,
+        nozzle.y,
+        nozzle.angle
+      );
+      return p;
+    }
+
+    function getPinTip() {
+      const localTip = { x: 12, y: 0 };
+      const p = rotatePoint(
+        pin.x + localTip.x,
+        pin.y + localTip.y,
+        pin.x,
+        pin.y,
+        pin.angle
+      );
+      return p;
+    }
+
+    /* ========= 交互：拖动喷嘴和针 ========= */
+    function hitNozzle(mx, my) {
+      return dist(mx, my, nozzle.x, nozzle.y) < 42;
+    }
+
+    function hitPin(mx, my) {
+      return dist(mx, my, pin.x, pin.y) < 32;
+    }
+
+    canvas.addEventListener("mousedown", (e) => {
+      mouse.down = true;
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+
+      if (hitNozzle(mouse.x, mouse.y)) {
+        draggingTarget = "nozzle";
+        nozzle.dragOffsetX = mouse.x - nozzle.x;
+        nozzle.dragOffsetY = mouse.y - nozzle.y;
+        nozzle.lastX = nozzle.x;
+        nozzle.lastY = nozzle.y;
+      } else if (hitPin(mouse.x, mouse.y)) {
+        draggingTarget = "pin";
+        pin.dragOffsetX = mouse.x - pin.x;
+        pin.dragOffsetY = mouse.y - pin.y;
+      }
+    });
+
+    window.addEventListener("mousemove", (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+
+      if (draggingTarget === "nozzle") {
+        nozzle.x = mouse.x - nozzle.dragOffsetX;
+        nozzle.y = mouse.y - nozzle.dragOffsetY;
+
+        const dx = nozzle.x - nozzle.lastX;
+        const dy = nozzle.y - nozzle.lastY;
+        nozzle.speed = Math.hypot(dx, dy);
+
+        if (nozzle.speed > 0.5) {
+          nozzle.angle = Math.atan2(dy, dx);
+        }
+
+        nozzle.lastX = nozzle.x;
+        nozzle.lastY = nozzle.y;
+      }
+
+      if (draggingTarget === "pin") {
+        const oldX = pin.x;
+        const oldY = pin.y;
+
+        pin.x = mouse.x - pin.dragOffsetX;
+        pin.y = mouse.y - pin.dragOffsetY;
+
+        const dx = pin.x - oldX;
+        const dy = pin.y - oldY;
+
+        if (Math.hypot(dx, dy) > 0.5) {
+          pin.angle = Math.atan2(dy, dx);
+        }
+      }
+    });
+
+    window.addEventListener("mouseup", () => {
+      mouse.down = false;
+      draggingTarget = null;
+    });
+
+    /* ========= 吐泡泡 ========= */
+    function emitBubble() {
+      const tip = getNozzleTip();
+
+      const power = draggingTarget === "nozzle"
+        ? clamp(2.2 + nozzle.speed * 0.18, 2.2, 8.5)
+        : 2.4;
+
+      const dirX = Math.cos(nozzle.angle);
+      const dirY = Math.sin(nozzle.angle);
+
+      const count = draggingTarget === "nozzle" && nozzle.speed > 5 ? 2 : 1;
+
+      for (let i = 0; i < count; i++) {
+        const r = 10 + Math.random() * 4;
+
+        bubbles.push({
+          id: bubbleIdSeed++,
+          x: tip.x + dirX * 8 + (Math.random() - 0.5) * 6,
+          y: tip.y + dirY * 8 + (Math.random() - 0.5) * 6,
+          vx: dirX * power + (Math.random() - 0.5) * 0.8,
+          vy: dirY * power + (Math.random() - 0.5) * 0.8,
+          r: r,
+          rot: Math.random() * Math.PI * 2,
+          wobble: Math.random() * Math.PI * 2,
+          settled: false,
+          slot: null
+        });
+      }
+    }
+
+    /* ========= 泡泡运动和堆积 ========= */
+    function trySettleBubble(b) {
+      if (b.settled) return;
+
+      const freeSlot = getFreeSlot();
+      if (!freeSlot) return;
+
+      freeSlot.used = true;
+      freeSlot.bubbleId = b.id;
+      b.slot = freeSlot;
+      b.settled = true;
+      b.vx *= 0.2;
+      b.vy *= 0.2;
+    }
+
+    function updateBubbles() {
+      const settleZoneX = W * 0.48;
+
+      for (let i = 0; i < bubbles.length; i++) {
+        const b = bubbles[i];
+
+        b.rot += 0.01;
+        b.wobble += 0.03;
+
+        if (!b.settled) {
+          b.x += b.vx;
+          b.y += b.vy;
+
+          b.vx *= 0.992;
+          b.vy *= 0.992;
+
+          /* 有轻微漂浮感 */
+          b.vy += Math.sin(performance.now() * 0.001 + b.id) * 0.003;
+
+          /* 到达堆积区域后开始堆积 */
+          if (b.x > settleZoneX) {
+            trySettleBubble(b);
+          } else {
+            /* 如果碰到已经堆好的泡泡，也会加入堆积 */
+            for (let j = 0; j < bubbles.length; j++) {
+              if (i === j) continue;
+              const other = bubbles[j];
+              if (!other.settled) continue;
+
+              if (dist(b.x, b.y, other.x, other.y) < b.r + other.r + 4) {
+                trySettleBubble(b);
+                break;
+              }
+            }
+          }
+        } else if (b.slot) {
+          const dx = b.slot.x - b.x;
+          const dy = b.slot.y - b.y;
+
+          b.vx += dx * 0.03;
+          b.vy += dy * 0.03;
+
+          b.vx *= 0.82;
+          b.vy *= 0.82;
+
+          b.x += b.vx;
+          b.y += b.vy;
+        }
+      }
+
+      /* 堆积泡泡之间轻微分离，避免过硬 */
+      for (let i = 0; i < bubbles.length; i++) {
+        const a = bubbles[i];
+        if (!a.settled) continue;
+
+        for (let j = i + 1; j < bubbles.length; j++) {
+          const b = bubbles[j];
+          if (!b.settled) continue;
+
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const d = Math.hypot(dx, dy);
+          const minD = a.r * 1.55;
+
+          if (d > 0 && d < minD) {
+            const overlap = (minD - d) * 0.06;
+            const nx = dx / d;
+            const ny = dy / d;
+
+            a.x -= nx * overlap;
+            a.y -= ny * overlap;
+            b.x += nx * overlap;
+            b.y += ny * overlap;
+          }
         }
       }
     }
 
-    const startX = nozzle.x + 90;
-    const startY = nozzle.y;
+    /* ========= 炸泡泡 ========= */
+    function popBubble(index) {
+      const b = bubbles[index];
+      releaseSlot(b);
 
-    slots.sort((a, b) => {
-      const da = distance(a.x, a.y, startX, startY);
-      const db = distance(b.x, b.y, startX, startY);
-      return da - db;
-    });
-  }
-
-  function getNextFreeSlot() {
-    for (const slot of slots) {
-      if (!occupiedSlots.has(slot.id)) {
-        return slot;
-      }
-    }
-    return null;
-  }
-
-  function getNozzleTip() {
-    return {
-      x: nozzle.x + 76,
-      y: nozzle.y
-    };
-  }
-
-  function spawnFlyingBubble() {
-    if (bubbles.length + flyingBubbles.length >= MAX_BUBBLES) return;
-
-    const slot = getNextFreeSlot();
-    if (!slot) return;
-
-    occupiedSlots.add(slot.id);
-
-    const start = getNozzleTip();
-
-    flyingBubbles.push({
-      x: start.x,
-      y: start.y,
-      startX: start.x,
-      startY: start.y,
-      targetX: slot.x,
-      targetY: slot.y,
-      slotId: slot.id,
-      r: random(10, 15),
-      progress: 0,
-      speed: random(0.008, 0.014),
-      wobble: random(0, Math.PI * 2)
-    });
-  }
-
-  function spawnSwingBubble() {
-    const now = performance.now();
-
-    if (now - lastSwingSpawn < 45) return;
-
-    const speed = Math.sqrt(nozzle.vx * nozzle.vx + nozzle.vy * nozzle.vy);
-
-    if (speed < 3.5) return;
-
-    lastSwingSpawn = now;
-
-    const tip = getNozzleTip();
-
-    const count = speed > 13 ? 3 : speed > 8 ? 2 : 1;
-
-    for (let i = 0; i < count; i++) {
-      swingBubbles.push({
-        x: tip.x + random(-6, 6),
-        y: tip.y + random(-6, 6),
-        r: random(9, 22),
-        vx: nozzle.vx * 0.18 + random(-1.2, 1.2),
-        vy: nozzle.vy * 0.18 + random(-1.2, 1.2),
-        life: 1,
-        wobble: random(0, Math.PI * 2)
-      });
-    }
-  }
-
-  function updateFlyingBubbles() {
-    const now = performance.now();
-
-    if (dragTarget !== "nozzle") {
-      if (now - lastSpawn > SPAWN_INTERVAL) {
-        spawnFlyingBubble();
-        lastSpawn = now;
-      }
-    } else {
-      spawnSwingBubble();
-    }
-
-    for (let i = flyingBubbles.length - 1; i >= 0; i--) {
-      const b = flyingBubbles[i];
-
-      b.progress += b.speed;
-
-      const t = easeOutCubic(Math.min(b.progress, 1));
-      const wave = Math.sin(t * Math.PI * 2 + b.wobble) * 18 * (1 - t);
-
-      b.x = b.startX + (b.targetX - b.startX) * t;
-      b.y = b.startY + (b.targetY - b.startY) * t + wave;
-
-      if (b.progress >= 1) {
-        bubbles.push({
-          x: b.targetX,
-          y: b.targetY,
-          r: CELL_R,
-          slotId: b.slotId,
-          birth: time,
-          wobble: random(0, Math.PI * 2)
+      for (let i = 0; i < 12; i++) {
+        particles.push({
+          x: b.x,
+          y: b.y,
+          vx: (Math.random() - 0.5) * 3.5,
+          vy: (Math.random() - 0.5) * 3.5,
+          r: 1.8 + Math.random() * 1.5,
+          life: 28 + Math.random() * 10,
+          maxLife: 38,
+          color: rainbow[Math.floor(Math.random() * rainbow.length)]
         });
-
-        flyingBubbles.splice(i, 1);
       }
-    }
-  }
 
-  function updateSwingBubbles() {
-    for (let i = swingBubbles.length - 1; i >= 0; i--) {
-      const b = swingBubbles[i];
-
-      b.x += b.vx;
-      b.y += b.vy;
-
-      b.vx *= 0.985;
-      b.vy *= 0.985;
-
-      b.vy -= 0.015;
-
-      b.x += Math.sin(time * 0.03 + b.wobble) * 0.12;
-      b.y += Math.cos(time * 0.025 + b.wobble) * 0.08;
-
-      b.life -= 0.004;
-
-      if (
-        b.life <= 0 ||
-        b.x < -100 ||
-        b.x > W + 100 ||
-        b.y < -100 ||
-        b.y > H + 100
-      ) {
-        swingBubbles.splice(i, 1);
-      }
-    }
-  }
-
-  function getHexPoints(cx, cy, r, seed) {
-    const points = [];
-
-    for (let i = 0; i < 6; i++) {
-      const angle = Math.PI / 3 * i + Math.PI / 6;
-      const organic =
-        Math.sin(time * 0.025 + seed + i * 1.6) * 1.4 +
-        Math.cos(seed * 0.7 + i) * 0.8;
-
-      points.push({
-        x: cx + Math.cos(angle) * (r + organic),
-        y: cy + Math.sin(angle) * (r + organic)
-      });
+      bubbles.splice(index, 1);
     }
 
-    return points;
-  }
+    function updatePinPop() {
+      const tip = getPinTip();
 
-  function drawHoneycombCell(bubble, index) {
-    const bornScale = Math.min((time - bubble.birth) / 18, 1);
-    const r = bubble.r * (0.4 + bornScale * 0.6);
-
-    const points = getHexPoints(bubble.x, bubble.y, r, bubble.wobble);
-
-    for (let i = 0; i < points.length; i++) {
-      const p1 = points[i];
-      const p2 = points[(i + 1) % points.length];
-
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.strokeStyle = colors[(i + index) % colors.length];
-      ctx.lineWidth = 2.5;
-      ctx.lineCap = "round";
-      ctx.stroke();
-    }
-  }
-
-  function drawFlyingBubble(b) {
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-    ctx.strokeStyle = getRainbowStroke(b.x, b.y, b.r);
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-  }
-
-  function drawSwingBubble(b) {
-    ctx.save();
-    ctx.globalAlpha = b.life;
-
-    ctx.beginPath();
-    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
-    ctx.strokeStyle = getRainbowStroke(b.x, b.y, b.r);
-    ctx.lineWidth = 2.4;
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(b.x - b.r * 0.28, b.y - b.r * 0.28, b.r * 0.18, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(20, 20, 143, 0.6)";
-    ctx.lineWidth = 1.2;
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  function drawNozzle() {
-    ctx.save();
-    ctx.translate(nozzle.x, nozzle.y);
-
-    ctx.lineWidth = 2.4;
-    ctx.strokeStyle = "#14148f";
-
-    ctx.beginPath();
-    ctx.ellipse(-12, 0, 14, 30, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    const g = ctx.createLinearGradient(-5, 0, 82, 0);
-    g.addColorStop(0, "#14148f");
-    g.addColorStop(0.25, "#304ffe");
-    g.addColorStop(0.5, "#ff3b82");
-    g.addColorStop(0.75, "#ff9500");
-    g.addColorStop(1, "#12b886");
-
-    ctx.strokeStyle = g;
-    ctx.beginPath();
-    ctx.moveTo(-2, -22);
-    ctx.bezierCurveTo(22, -18, 50, -14, 76, -5);
-    ctx.bezierCurveTo(86, -2, 86, 2, 76, 5);
-    ctx.bezierCurveTo(50, 14, 22, 18, -2, 22);
-    ctx.stroke();
-
-    ctx.strokeStyle = "#14148f";
-    ctx.beginPath();
-    ctx.moveTo(-10, 30);
-    ctx.lineTo(-10, 92);
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  function getPinTip() {
-    return {
-      x: pin.x - 8,
-      y: pin.y + 82
-    };
-  }
-
-  function drawPin() {
-    ctx.save();
-    ctx.translate(pin.x, pin.y);
-
-    ctx.strokeStyle = "#14148f";
-    ctx.lineWidth = 2.4;
-
-    ctx.beginPath();
-    ctx.ellipse(0, -24, 13, 26, 0.35, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(-6, 0);
-    ctx.lineTo(-30, 58);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(-8, 82);
-    ctx.lineTo(-22, 142);
-    ctx.lineTo(4, 88);
-    ctx.closePath();
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  function drawLeftSmallBubbles() {
-    ctx.save();
-    ctx.translate(nozzle.x - 135, nozzle.y - 10);
-
-    ctx.strokeStyle = "#14148f";
-    ctx.lineWidth = 2.4;
-
-    ctx.beginPath();
-    ctx.arc(0, -18, 13, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.arc(0, 14, 13, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.restore();
-  }
-
-  function createBurst(x, y) {
-    for (let i = 0; i < 14; i++) {
-      particles.push({
-        x,
-        y,
-        vx: Math.cos((Math.PI * 2 / 14) * i) * random(1, 3),
-        vy: Math.sin((Math.PI * 2 / 14) * i) * random(1, 3),
-        life: 1,
-        color: colors[i % colors.length]
-      });
-    }
-  }
-
-  function updateParticles() {
-    for (let i = particles.length - 1; i >= 0; i--) {
-      const p = particles[i];
-
-      p.x += p.vx;
-      p.y += p.vy;
-      p.life -= 0.035;
-
-      if (p.life <= 0) {
-        particles.splice(i, 1);
-      }
-    }
-  }
-
-  function drawParticles() {
-    for (const p of particles) {
-      ctx.globalAlpha = p.life;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.fill();
-      ctx.globalAlpha = 1;
-    }
-  }
-
-  function checkPinCollision() {
-    const tip = getPinTip();
-
-    for (let i = bubbles.length - 1; i >= 0; i--) {
-      const b = bubbles[i];
-
-      if (distance(tip.x, tip.y, b.x, b.y) < b.r + 8) {
-        occupiedSlots.delete(b.slotId);
-        createBurst(b.x, b.y);
-        bubbles.splice(i, 1);
+      for (let i = bubbles.length - 1; i >= 0; i--) {
+        const b = bubbles[i];
+        if (dist(tip.x, tip.y, b.x, b.y) < b.r + 5) {
+          popBubble(i);
+        }
       }
     }
 
-    for (let i = flyingBubbles.length - 1; i >= 0; i--) {
-      const b = flyingBubbles[i];
+    function updateParticles() {
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.96;
+        p.vy *= 0.96;
+        p.life--;
 
-      if (distance(tip.x, tip.y, b.x, b.y) < b.r + 8) {
-        occupiedSlots.delete(b.slotId);
-        createBurst(b.x, b.y);
-        flyingBubbles.splice(i, 1);
+        if (p.life <= 0) {
+          particles.splice(i, 1);
+        }
       }
     }
 
-    for (let i = swingBubbles.length - 1; i >= 0; i--) {
-      const b = swingBubbles[i];
+    /* ========= 自动吐泡泡 + 挥动增强 ========= */
+    function updateEmission(now) {
+      let interval = 220;
 
-      if (distance(tip.x, tip.y, b.x, b.y) < b.r + 8) {
-        createBurst(b.x, b.y);
-        swingBubbles.splice(i, 1);
+      if (draggingTarget === "nozzle") {
+        interval = clamp(220 - nozzle.speed * 18, 50, 220);
       }
-    }
-  }
 
-  function hitNozzle(x, y) {
-    return (
-      x > nozzle.x - 45 &&
-      x < nozzle.x + 100 &&
-      y > nozzle.y - 50 &&
-      y < nozzle.y + 110
-    );
-  }
-
-  function hitPin(x, y) {
-    return (
-      x > pin.x - 50 &&
-      x < pin.x + 30 &&
-      y > pin.y - 60 &&
-      y < pin.y + 150
-    );
-  }
-
-  canvas.addEventListener("mousedown", e => {
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-
-    if (hitNozzle(mx, my)) {
-      dragTarget = "nozzle";
-      dragOffsetX = mx - nozzle.x;
-      dragOffsetY = my - nozzle.y;
-      nozzle.lastX = nozzle.x;
-      nozzle.lastY = nozzle.y;
-    } else if (hitPin(mx, my)) {
-      dragTarget = "pin";
-      dragOffsetX = mx - pin.x;
-      dragOffsetY = my - pin.y;
-    }
-  });
-
-  canvas.addEventListener("mousemove", e => {
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX - rect.left;
-    const my = e.clientY - rect.top;
-
-    if (dragTarget === "nozzle") {
-      const newX = clamp(mx - dragOffsetX, 80, W - 120);
-      const newY = clamp(my - dragOffsetY, 80, H - 130);
-
-      nozzle.vx = newX - nozzle.x;
-      nozzle.vy = newY - nozzle.y;
-
-      nozzle.x = newX;
-      nozzle.y = newY;
-
-      canvas.style.cursor = "grab";
-    } else if (dragTarget === "pin") {
-      pin.x = clamp(mx - dragOffsetX, 50, W - 60);
-      pin.y = clamp(my - dragOffsetY, 80, H - 180);
-      canvas.style.cursor = "grab";
-    } else {
-      if (hitNozzle(mx, my) || hitPin(mx, my)) {
-        canvas.style.cursor = "grab";
-      } else {
-        canvas.style.cursor = "default";
+      if (now - lastEmitTime > interval) {
+        emitBubble();
+        lastEmitTime = now;
       }
-    }
-  });
 
-  window.addEventListener("mouseup", () => {
-    dragTarget = null;
-    nozzle.vx = 0;
-    nozzle.vy = 0;
-    canvas.style.cursor = "default";
-  });
-
-  function draw() {
-    time++;
-
-    ctx.clearRect(0, 0, W, H);
-
-    ctx.fillStyle = "#f2f2f2";
-    ctx.fillRect(0, 0, W, H);
-
-    updateFlyingBubbles();
-    updateSwingBubbles();
-    checkPinCollision();
-    updateParticles();
-
-    for (let i = 0; i < bubbles.length; i++) {
-      drawHoneycombCell(bubbles[i], i);
+      nozzle.speed *= 0.9;
     }
 
-    for (const b of flyingBubbles) {
-      drawFlyingBubble(b);
+    /* ========= 绘制 ========= */
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+
+      for (let i = 0; i < bubbles.length; i++) {
+        drawSoftBubble(bubbles[i]);
+      }
+
+      drawParticles();
+      drawNozzle();
+      drawPin();
     }
 
-    for (const b of swingBubbles) {
-      drawSwingBubble(b);
+    function animate(now = 0) {
+      updateEmission(now);
+      updateBubbles();
+      updatePinPop();
+      updateParticles();
+      draw();
+      animationId = requestAnimationFrame(animate);
     }
 
-    drawParticles();
+    window.addEventListener("resize", resizeCanvas);
 
-    drawLeftSmallBubbles();
-    drawNozzle();
-    drawPin();
-
-    requestAnimationFrame(draw);
-  }
-
-  rebuildSlots();
-  draw();
-</script>
-
+    resizeCanvas();
+    animate();
+  </script>
 </body>
 </html>
