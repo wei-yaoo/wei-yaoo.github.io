@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -117,14 +118,53 @@
             align-items: start;
         }
 
-        /* 左栏：个人卡通头像 */
+        /* ========================================================
+           ✨ 【重点修改区域】让头像框动起来的酷炫魔法核心代码 ✨
+           ======================================================== */
+        .avatar-box {
+            position: relative;
+            border-radius: 14px;
+            overflow: hidden;
+            /* 基础微光外边框阴影 */
+            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.1), 0 4px 12px rgba(0,0,0,0.05);
+            /* 平滑过渡动画时间 */
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            /* 默认自带一个极其轻微的呼吸效果 */
+            animation: avatarBreath 6s ease-in-out infinite alternate;
+        }
+
         .avatar-box img {
             width: 100%;
             height: auto;
             border-radius: 14px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
             display: block;
+            /* 确保图片放大时平滑不糊 */
+            transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
         }
+
+        /* 💡 悬停交互魔法：当鼠标放上去时 */
+        .avatar-box:hover {
+            /* 1. 头像整体微微浮起，投影加深，颜色带有淡淡的设计感紫光 */
+            transform: translateY(-8px);
+            box-shadow: 0 20px 35px rgba(79, 70, 229, 0.18), 0 10px 20px rgba(0,0,0,0.08);
+        }
+
+        .avatar-box:hover img {
+            /* 2. 内部的卡通照片也会平滑放大 1.05 倍，非常有视差高级感 */
+            transform: scale(1.05);
+        }
+
+        /* 3. 循环自启动的呼吸小动画，让网页不呆板 */
+        @keyframes avatarBreath {
+            0% {
+                transform: scale(1);
+            }
+            100% {
+                transform: scale(1.015) translateY(-2px);
+                box-shadow: 0 12px 28px rgba(79, 70, 229, 0.13), 0 6px 14px rgba(0,0,0,0.06);
+            }
+        }
+        /* ======================================================== */
 
         /* 右栏：细腻文字排版 */
         .info-box h3 {
@@ -168,6 +208,14 @@
             font-size: 13px;
             color: #57606f;
             font-weight: 500;
+            transition: all 0.2s;
+            cursor: default;
+        }
+        /* 顺便让你的小兴趣标签也能动 */
+        .interests-tags li:hover {
+            background: #4f46e5;
+            color: white;
+            transform: scale(1.05);
         }
 
         /* 联系方式 */
@@ -199,6 +247,13 @@
             }
             .navbar {
                 padding: 15px 20px;
+            }
+            /* 手机端取消hover位移，避免长按奇怪bug，保留呼吸即可 */
+            .avatar-box:hover {
+                transform: none;
+            }
+            .avatar-box:hover img {
+                transform: none;
             }
         }
     </style>
@@ -236,7 +291,7 @@
                 </div>
 
                 <div class="info-box">
-                    <h3>魏瑶</h3>
+                    <h3>魏瑶 (Siri)</h3>
                     <p class="info-tagline">(努力学习版 活跃版 快乐版)</p>
                     
                     <p class="info-text">Hello，我是一个普通的工业设计工程学生。欢迎来到我的个人频道！</p>
@@ -244,7 +299,7 @@
 
                     <h4>我的兴趣 / Interests</h4>
                     <ul class="interests-tags">
-                        <li>🎨 画画 </li>
+                        <li>🎨 画面</li>
                         <li>✈️ 旅行</li>
                         <li>📷 影像摄影</li>
                     </ul>
