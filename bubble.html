@@ -6,13 +6,14 @@
   <title>Bubble Interaction</title>
 
   <style>
-    html, body {
+    html,
+    body {
       margin: 0;
       padding: 0;
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background: #ececec;
+      background: #eeeeee;
       font-family: Arial, "Microsoft YaHei", sans-serif;
     }
 
@@ -20,581 +21,677 @@
       display: block;
       width: 100vw;
       height: 100vh;
+      background: #eeeeee;
+      touch-action: none;
     }
   </style>
 </head>
+
 <body>
-  <canvas id="bubbleCanvas"></canvas>
+<canvas id="bubbleCanvas"></canvas>
 
-  <script>
-    const canvas = document.getElementById("bubbleCanvas");
-    const ctx = canvas.getContext("2d");
+<script>
+  const canvas = document.getElementById("bubbleCanvas");
+  const ctx = canvas.getContext("2d");
 
-    let W = 0;
-    let H = 0;
-    let animationId = null;
+  let W = 0;
+  let H = 0;
+  let time = 0;
 
-    const rainbow = [
-      "#2136b6",
-      "#2d63ff",
-      "#21c8ff",
-      "#34c759",
-      "#9ad22b",
-      "#ff9f0a",
-      "#ff5e8a",
-      "#d94bff"
-    ];
+  const colors = [
+    "#17229b",
+    "#245bff",
+    "#19b7ff",
+    "#19bf77",
+    "#73c928",
+    "#ff9f1a",
+    "#ff4b9b",
+    "#9b45ff"
+  ];
 
-    function resizeCanvas() {
-      W = canvas.width = window.innerWidth;
-      H = canvas.height = window.innerHeight;
-      buildSlots();
-    }
+  const mouse = {
+    x: 0,
+    y: 0
+  };
 
-    function dist(x1, y1, x2, y2) {
-      return Math.hypot(x2 - x1, y2 - y1);
-    }
+  const nozzle = {
+    x: 180,
+    y: 260,
+    angle: -0.18,
+    oldX: 180,
+    oldY: 260,
+    speed: 0,
+    offsetX: 0,
+    offsetY: 0
+  };
 
-    function clamp(v, min, max) {
-      return Math.max(min, Math.min(max, v));
-    }
+  const pin = {
+    x: 180,
+    y: 430,
+    angle: -1.15,
+    offsetX: 0,
+    offsetY: 0
+  };
 
-    function lerp(a, b, t) {
-      return a + (b - a) * t;
-    }
+  let dragTarget = null;
 
-    function rotatePoint(px, py, cx, cy, angle) {
-      const s = Math.sin(angle);
-      const c = Math.cos(angle);
-      const x = px - cx;
-      const y = py - cy;
-      return {
-        x: x * c - y * s + cx,
-        y: x * s + y * c + cy
-      };
-    }
+  const bubbles = [];
+  const particles = [];
+  let slots = [];
+  let bubbleId = 0;
+  let lastAutoEmit = 0;
+  let lastSwingEmit = 0;
 
-    const mouse = {
-      x: 0,
-      y: 0,
-      down: false
+  const CELL_R = 17;
+  const MAX_BUBBLES = 230;
+
+  function resizeCanvas() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+
+    buildSlots();
+  }
+
+  window.addEventListener("resize", resizeCanvas);
+
+  function getPointer(e) {
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
     };
+  }
 
-    let draggingTarget = null;
+  function clamp(v, min, max) {
+    return Math.max(min, Math.min(max, v));
+  }
 
-    /* ========= 喷嘴（采用图二样式，只留一个） ========= */
-    const nozzle = {
-      x: 210,
-      y: 240,
-      angle: -0.2,
-      dragOffsetX: 0,
-      dragOffsetY: 0,
-      lastX: 210,
-      lastY: 240,
-      speed: 0
+  function distance(x1, y1, x2, y2) {
+    return Math.hypot(x2 - x1, y2 - y1);
+  }
+
+  function random(min, max) {
+    return Math.random() * (max - min) + min;
+  }
+
+  function easeOutCubic(t) {
+    return 1 - Math.pow(1 - t, 3);
+  }
+
+  function rotatePoint(px, py, cx, cy, angle) {
+    const s = Math.sin(angle);
+    const c = Math.cos(angle);
+    const x = px - cx;
+    const y = py - cy;
+
+    return {
+      x: x * c - y * s + cx,
+      y: x * s + y * c + cy
     };
+  }
 
-    /* ========= 炸泡泡的针 ========= */
-    const pin = {
-      x: 180,
-      y: 430,
-      angle: -0.25,
-      dragOffsetX: 0,
-      dragOffsetY: 0
-    };
+  function rainbowGradient(x, y, r) {
+    const g = ctx.createLinearGradient(x - r, y - r, x + r, y + r);
 
-    /* ========= 泡泡数据 ========= */
-    let bubbles = [];
-    let particles = [];
-    let bubbleIdSeed = 0;
-    let slots = [];
-    let lastEmitTime = 0;
+    g.addColorStop(0.00, colors[0]);
+    g.addColorStop(0.14, colors[1]);
+    g.addColorStop(0.28, colors[2]);
+    g.addColorStop(0.42, colors[3]);
+    g.addColorStop(0.58, colors[4]);
+    g.addColorStop(0.72, colors[5]);
+    g.addColorStop(0.86, colors[6]);
+    g.addColorStop(1.00, colors[7]);
 
-    /* ========= 堆积区域 ========= */
-    function buildSlots() {
-      slots = [];
+    return g;
+  }
 
-      const centerX = W * 0.72;
-      const centerY = H * 0.50;
-      const rx = Math.min(230, W * 0.22);
-      const ry = Math.min(220, H * 0.30);
-      const spacing = 26;
+  function buildSlots() {
+    slots = [];
 
-      let rowIndex = 0;
+    const cx = W * 0.68;
+    const cy = H * 0.50;
+    const rx = Math.min(W * 0.26, 350);
+    const ry = Math.min(H * 0.34, 230);
 
-      for (let y = -ry; y <= ry; y += spacing * 0.92) {
-        const offset = rowIndex % 2 === 0 ? 0 : spacing * 0.43;
+    const dx = CELL_R * 1.48;
+    const dy = CELL_R * 1.28;
 
-        for (let x = -rx; x <= rx; x += spacing * 0.86) {
-          const px = x + offset;
+    let id = 0;
 
-          const nx = px / rx;
-          const ny = y / ry;
+    for (let row = -12; row <= 12; row++) {
+      for (let col = -16; col <= 16; col++) {
+        const offset = row % 2 === 0 ? 0 : dx * 0.5;
 
-          const shape = nx * nx * 0.92 + ny * ny * 1.02;
+        const x = cx + col * dx + offset;
+        const y = cy + row * dy;
 
-          if (shape < 1) {
-            slots.push({
-              x: centerX + px,
-              y: centerY + y,
-              used: false,
-              bubbleId: null,
-              order: (centerX + px) + Math.abs(y) * 0.16
-            });
-          }
+        const nx = (x - cx) / rx;
+        const ny = (y - cy) / ry;
+
+        const organic =
+          Math.sin(col * 1.2 + row * 0.9) * 0.12 +
+          Math.cos(col * 0.6 - row * 1.4) * 0.08;
+
+        if (nx * nx * 0.92 + ny * ny * 1.08 < 1.02 + organic) {
+          slots.push({
+            id: id++,
+            x,
+            y,
+            used: false
+          });
         }
-
-        rowIndex++;
       }
-
-      slots.sort((a, b) => a.order - b.order);
     }
 
-    function getFreeSlot() {
-      for (let i = 0; i < slots.length; i++) {
-        if (!slots[i].used) return slots[i];
+    slots.sort((a, b) => {
+      return a.x + Math.abs(a.y - cy) * 0.32 - (b.x + Math.abs(b.y - cy) * 0.32);
+    });
+  }
+
+  function getFreeSlot() {
+    for (const slot of slots) {
+      if (!slot.used) return slot;
+    }
+
+    return null;
+  }
+
+  function releaseSlot(slot) {
+    if (!slot) return;
+    slot.used = false;
+  }
+
+  function getNozzleTip() {
+    const localX = 18;
+    const localY = 0;
+
+    return rotatePoint(
+      nozzle.x + localX,
+      nozzle.y + localY,
+      nozzle.x,
+      nozzle.y,
+      nozzle.angle
+    );
+  }
+
+  function getPinTip() {
+    const localX = 42;
+    const localY = 0;
+
+    return rotatePoint(
+      pin.x + localX,
+      pin.y + localY,
+      pin.x,
+      pin.y,
+      pin.angle
+    );
+  }
+
+  function hitNozzle(x, y) {
+    return distance(x, y, nozzle.x, nozzle.y) < 48;
+  }
+
+  function hitPin(x, y) {
+    return distance(x, y, pin.x, pin.y) < 54;
+  }
+
+  function emitToCluster() {
+    if (bubbles.length > MAX_BUBBLES) return;
+
+    const slot = getFreeSlot();
+    if (!slot) return;
+
+    slot.used = true;
+
+    const start = getNozzleTip();
+
+    const dx = Math.cos(nozzle.angle);
+    const dy = Math.sin(nozzle.angle);
+
+    bubbles.push({
+      id: bubbleId++,
+      mode: "flying",
+      x: start.x,
+      y: start.y,
+      startX: start.x,
+      startY: start.y,
+      targetX: slot.x,
+      targetY: slot.y,
+      controlX: start.x + dx * random(90, 180),
+      controlY: start.y + dy * random(40, 90) + random(-60, 60),
+      slot,
+      r: random(10, 14),
+      t: 0,
+      speed: random(0.007, 0.013),
+      wobble: random(0, Math.PI * 2),
+      born: time
+    });
+  }
+
+  function emitBySwing() {
+    const now = performance.now();
+
+    if (now - lastSwingEmit < 42) return;
+    if (nozzle.speed < 3.5) return;
+
+    lastSwingEmit = now;
+
+    const tip = getNozzleTip();
+
+    const dx = Math.cos(nozzle.angle);
+    const dy = Math.sin(nozzle.angle);
+
+    const count = nozzle.speed > 16 ? 4 : nozzle.speed > 9 ? 3 : 2;
+
+    for (let i = 0; i < count; i++) {
+      bubbles.push({
+        id: bubbleId++,
+        mode: "free",
+        x: tip.x + random(-5, 5),
+        y: tip.y + random(-5, 5),
+        vx: dx * random(2.2, 4.8) + random(-1.4, 1.4) + nozzle.speed * 0.08,
+        vy: dy * random(2.2, 4.8) + random(-1.4, 1.4),
+        r: random(8, 17),
+        life: 1,
+        wobble: random(0, Math.PI * 2),
+        born: time
+      });
+    }
+  }
+
+  function updateEmission(now) {
+    if (dragTarget === "nozzle") {
+      emitBySwing();
+    } else {
+      if (now - lastAutoEmit > 230) {
+        emitToCluster();
+        lastAutoEmit = now;
       }
-      return null;
     }
 
-    function releaseSlot(bubble) {
-      if (!bubble.slot) return;
-      bubble.slot.used = false;
-      bubble.slot.bubbleId = null;
-      bubble.slot = null;
-    }
+    nozzle.speed *= 0.88;
+  }
 
-    /* ========= 图形绘制 ========= */
-    function createRainbowGradient(x, y, r) {
-      const g = ctx.createLinearGradient(x - r, y - r, x + r, y + r);
-      g.addColorStop(0.00, rainbow[0]);
-      g.addColorStop(0.14, rainbow[1]);
-      g.addColorStop(0.28, rainbow[2]);
-      g.addColorStop(0.42, rainbow[3]);
-      g.addColorStop(0.58, rainbow[4]);
-      g.addColorStop(0.72, rainbow[5]);
-      g.addColorStop(0.86, rainbow[6]);
-      g.addColorStop(1.00, rainbow[7]);
-      return g;
-    }
+  function updateBubbles() {
+    for (let i = bubbles.length - 1; i >= 0; i--) {
+      const b = bubbles[i];
 
-    /* 柔和一点的泡泡轮廓 */
-    function drawSoftBubble(b) {
-      const sides = 8;
-      const points = [];
+      if (b.mode === "flying") {
+        b.t += b.speed;
 
-      for (let i = 0; i < sides; i++) {
-        const ang = b.rot + (Math.PI * 2 / sides) * i;
-        const rr = b.r * (0.92 + 0.08 * Math.sin(b.wobble + i * 0.9));
-        points.push({
-          x: b.x + Math.cos(ang) * rr,
-          y: b.y + Math.sin(ang) * rr
-        });
-      }
+        const t = easeOutCubic(Math.min(b.t, 1));
+        const mt = 1 - t;
 
-      ctx.save();
+        b.x =
+          mt * mt * b.startX +
+          2 * mt * t * b.controlX +
+          t * t * b.targetX;
 
-      const grad = createRainbowGradient(b.x, b.y, b.r * 1.2);
+        b.y =
+          mt * mt * b.startY +
+          2 * mt * t * b.controlY +
+          t * t * b.targetY +
+          Math.sin(t * Math.PI * 2 + b.wobble) * 12 * (1 - t);
 
-      ctx.beginPath();
-
-      for (let i = 0; i < points.length; i++) {
-        const current = points[i];
-        const next = points[(i + 1) % points.length];
-        const midX = (current.x + next.x) * 0.5;
-        const midY = (current.y + next.y) * 0.5;
-
-        if (i === 0) {
-          const prev = points[points.length - 1];
-          const startX = (prev.x + current.x) * 0.5;
-          const startY = (prev.y + current.y) * 0.5;
-          ctx.moveTo(startX, startY);
+        if (b.t >= 1) {
+          b.mode = "settled";
+          b.x = b.targetX;
+          b.y = b.targetY;
+          b.r = CELL_R;
+          b.birth = time;
         }
-
-        ctx.quadraticCurveTo(current.x, current.y, midX, midY);
       }
 
-      ctx.closePath();
-      ctx.lineWidth = 2.2;
-      ctx.strokeStyle = grad;
-      ctx.stroke();
+      if (b.mode === "settled") {
+        b.wobble += 0.025;
+      }
 
-      ctx.globalAlpha = 0.08;
-      ctx.fillStyle = "#ffffff";
-      ctx.fill();
-      ctx.globalAlpha = 1;
+      if (b.mode === "free") {
+        b.x += b.vx;
+        b.y += b.vy;
 
-      ctx.restore();
+        b.vx *= 0.985;
+        b.vy *= 0.985;
+        b.vy -= 0.01;
+
+        b.x += Math.sin(time * 0.03 + b.wobble) * 0.12;
+        b.y += Math.cos(time * 0.025 + b.wobble) * 0.08;
+
+        b.life -= 0.004;
+
+        if (
+          b.life <= 0 ||
+          b.x < -80 ||
+          b.x > W + 80 ||
+          b.y < -80 ||
+          b.y > H + 80
+        ) {
+          bubbles.splice(i, 1);
+        }
+      }
     }
+  }
 
-    function drawParticles() {
-      particles.forEach(p => {
-        ctx.save();
-        ctx.globalAlpha = p.life / p.maxLife;
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = p.color;
-        ctx.fill();
-        ctx.restore();
+  function createBurst(x, y) {
+    for (let i = 0; i < 16; i++) {
+      particles.push({
+        x,
+        y,
+        vx: Math.cos((Math.PI * 2 / 16) * i) * random(1.2, 3.4),
+        vy: Math.sin((Math.PI * 2 / 16) * i) * random(1.2, 3.4),
+        life: random(18, 32),
+        maxLife: 32,
+        color: colors[i % colors.length]
+      });
+    }
+  }
+
+  function updatePinPop() {
+    const tip = getPinTip();
+
+    for (let i = bubbles.length - 1; i >= 0; i--) {
+      const b = bubbles[i];
+
+      const r = b.mode === "settled" ? b.r * 0.92 : b.r;
+
+      if (distance(tip.x, tip.y, b.x, b.y) < r + 7) {
+        if (b.slot) releaseSlot(b.slot);
+        createBurst(b.x, b.y);
+        bubbles.splice(i, 1);
+      }
+    }
+  }
+
+  function updateParticles() {
+    for (let i = particles.length - 1; i >= 0; i--) {
+      const p = particles[i];
+
+      p.x += p.vx;
+      p.y += p.vy;
+
+      p.vx *= 0.96;
+      p.vy *= 0.96;
+
+      p.life--;
+
+      if (p.life <= 0) {
+        particles.splice(i, 1);
+      }
+    }
+  }
+
+  function softCellPoints(x, y, r, seed, sides = 8) {
+    const points = [];
+
+    for (let i = 0; i < sides; i++) {
+      const angle = (Math.PI * 2 / sides) * i + Math.PI / 8;
+      const rr =
+        r *
+        (0.95 +
+          Math.sin(time * 0.018 + seed + i * 1.2) * 0.055 +
+          Math.cos(seed * 0.7 + i) * 0.035);
+
+      points.push({
+        x: x + Math.cos(angle) * rr,
+        y: y + Math.sin(angle) * rr
       });
     }
 
-    /* 喷嘴：采用图二样式 */
-    function drawNozzle() {
+    return points;
+  }
+
+  function drawSoftCell(b, index) {
+    const bornScale = b.birth ? Math.min((time - b.birth) / 18, 1) : 1;
+    const r = b.r * (0.45 + bornScale * 0.55);
+
+    const points = softCellPoints(b.x, b.y, r, b.wobble, 8);
+
+    ctx.save();
+
+    ctx.beginPath();
+
+    for (let i = 0; i < points.length; i++) {
+      const current = points[i];
+      const next = points[(i + 1) % points.length];
+      const midX = (current.x + next.x) / 2;
+      const midY = (current.y + next.y) / 2;
+
+      if (i === 0) {
+        const prev = points[points.length - 1];
+        ctx.moveTo((prev.x + current.x) / 2, (prev.y + current.y) / 2);
+      }
+
+      ctx.quadraticCurveTo(current.x, current.y, midX, midY);
+    }
+
+    ctx.closePath();
+
+    ctx.lineWidth = 2.15;
+    ctx.strokeStyle = rainbowGradient(b.x, b.y, r);
+    ctx.stroke();
+
+    ctx.globalAlpha = 0.035;
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawFlyingCircle(b) {
+    ctx.save();
+
+    if (b.life !== undefined) {
+      ctx.globalAlpha = Math.max(b.life, 0);
+    }
+
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+    ctx.lineWidth = 2.2;
+    ctx.strokeStyle = rainbowGradient(b.x, b.y, b.r);
+    ctx.stroke();
+
+    ctx.globalAlpha = (b.life !== undefined ? b.life : 1) * 0.18;
+    ctx.beginPath();
+    ctx.arc(b.x - b.r * 0.28, b.y - b.r * 0.28, b.r * 0.20, 0, Math.PI * 2);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function drawNozzle() {
+    ctx.save();
+    ctx.translate(nozzle.x, nozzle.y);
+    ctx.rotate(nozzle.angle);
+
+    ctx.lineWidth = 2.8;
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    ctx.strokeStyle = "#17229b";
+
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 12, 25, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(-3, 23);
+    ctx.lineTo(-18, 68);
+    ctx.stroke();
+
+    const tip = 18;
+    const g = ctx.createLinearGradient(0, -22, tip, 22);
+    g.addColorStop(0.00, "#17229b");
+    g.addColorStop(0.35, "#ff4b9b");
+    g.addColorStop(0.70, "#ff9f1a");
+    g.addColorStop(1.00, "#19bf77");
+
+    ctx.strokeStyle = g;
+    ctx.lineWidth = 2.2;
+
+    ctx.beginPath();
+    ctx.moveTo(8, -20);
+    ctx.quadraticCurveTo(20, -6, 18, 0);
+    ctx.quadraticCurveTo(20, 6, 8, 20);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawPin() {
+    ctx.save();
+    ctx.translate(pin.x, pin.y);
+    ctx.rotate(pin.angle);
+
+    ctx.lineWidth = 2.6;
+    ctx.strokeStyle = "#17229b";
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    ctx.beginPath();
+    ctx.ellipse(-12, 0, 12, 22, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(44, 0);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(44, 0);
+    ctx.lineTo(28, -8);
+    ctx.lineTo(28, 8);
+    ctx.closePath();
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawParticles() {
+    for (const p of particles) {
       ctx.save();
-      ctx.translate(nozzle.x, nozzle.y);
-      ctx.rotate(nozzle.angle);
-
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "#1d2ea8";
-      ctx.lineCap = "round";
-      ctx.lineJoin = "round";
-
-      /* 圆环 */
+      ctx.globalAlpha = p.life / p.maxLife;
       ctx.beginPath();
-      ctx.ellipse(0, 0, 16, 24, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      /* 手柄 */
-      ctx.beginPath();
-      ctx.moveTo(-3, 22);
-      ctx.lineTo(-18, 62);
-      ctx.stroke();
-
+      ctx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.fill();
       ctx.restore();
     }
+  }
 
-    /* 针 */
-    function drawPin() {
-      ctx.save();
-      ctx.translate(pin.x, pin.y);
-      ctx.rotate(pin.angle);
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
 
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = "#1d2ea8";
-      ctx.lineJoin = "round";
-      ctx.lineCap = "round";
+    for (let i = 0; i < bubbles.length; i++) {
+      const b = bubbles[i];
 
-      ctx.beginPath();
-      ctx.moveTo(-4, -10);
-      ctx.lineTo(12, 0);
-      ctx.lineTo(-4, 10);
-      ctx.closePath();
-      ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(-4, 0);
-      ctx.lineTo(-28, 0);
-      ctx.stroke();
-
-      ctx.restore();
-    }
-
-    function getNozzleTip() {
-      const localTip = { x: 18, y: 0 };
-      const p = rotatePoint(
-        nozzle.x + localTip.x,
-        nozzle.y + localTip.y,
-        nozzle.x,
-        nozzle.y,
-        nozzle.angle
-      );
-      return p;
-    }
-
-    function getPinTip() {
-      const localTip = { x: 12, y: 0 };
-      const p = rotatePoint(
-        pin.x + localTip.x,
-        pin.y + localTip.y,
-        pin.x,
-        pin.y,
-        pin.angle
-      );
-      return p;
-    }
-
-    /* ========= 交互：拖动喷嘴和针 ========= */
-    function hitNozzle(mx, my) {
-      return dist(mx, my, nozzle.x, nozzle.y) < 42;
-    }
-
-    function hitPin(mx, my) {
-      return dist(mx, my, pin.x, pin.y) < 32;
-    }
-
-    canvas.addEventListener("mousedown", (e) => {
-      mouse.down = true;
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-
-      if (hitNozzle(mouse.x, mouse.y)) {
-        draggingTarget = "nozzle";
-        nozzle.dragOffsetX = mouse.x - nozzle.x;
-        nozzle.dragOffsetY = mouse.y - nozzle.y;
-        nozzle.lastX = nozzle.x;
-        nozzle.lastY = nozzle.y;
-      } else if (hitPin(mouse.x, mouse.y)) {
-        draggingTarget = "pin";
-        pin.dragOffsetX = mouse.x - pin.x;
-        pin.dragOffsetY = mouse.y - pin.y;
-      }
-    });
-
-    window.addEventListener("mousemove", (e) => {
-      mouse.x = e.clientX;
-      mouse.y = e.clientY;
-
-      if (draggingTarget === "nozzle") {
-        nozzle.x = mouse.x - nozzle.dragOffsetX;
-        nozzle.y = mouse.y - nozzle.dragOffsetY;
-
-        const dx = nozzle.x - nozzle.lastX;
-        const dy = nozzle.y - nozzle.lastY;
-        nozzle.speed = Math.hypot(dx, dy);
-
-        if (nozzle.speed > 0.5) {
-          nozzle.angle = Math.atan2(dy, dx);
-        }
-
-        nozzle.lastX = nozzle.x;
-        nozzle.lastY = nozzle.y;
-      }
-
-      if (draggingTarget === "pin") {
-        const oldX = pin.x;
-        const oldY = pin.y;
-
-        pin.x = mouse.x - pin.dragOffsetX;
-        pin.y = mouse.y - pin.dragOffsetY;
-
-        const dx = pin.x - oldX;
-        const dy = pin.y - oldY;
-
-        if (Math.hypot(dx, dy) > 0.5) {
-          pin.angle = Math.atan2(dy, dx);
-        }
-      }
-    });
-
-    window.addEventListener("mouseup", () => {
-      mouse.down = false;
-      draggingTarget = null;
-    });
-
-    /* ========= 吐泡泡 ========= */
-    function emitBubble() {
-      const tip = getNozzleTip();
-
-      const power = draggingTarget === "nozzle"
-        ? clamp(2.2 + nozzle.speed * 0.18, 2.2, 8.5)
-        : 2.4;
-
-      const dirX = Math.cos(nozzle.angle);
-      const dirY = Math.sin(nozzle.angle);
-
-      const count = draggingTarget === "nozzle" && nozzle.speed > 5 ? 2 : 1;
-
-      for (let i = 0; i < count; i++) {
-        const r = 10 + Math.random() * 4;
-
-        bubbles.push({
-          id: bubbleIdSeed++,
-          x: tip.x + dirX * 8 + (Math.random() - 0.5) * 6,
-          y: tip.y + dirY * 8 + (Math.random() - 0.5) * 6,
-          vx: dirX * power + (Math.random() - 0.5) * 0.8,
-          vy: dirY * power + (Math.random() - 0.5) * 0.8,
-          r: r,
-          rot: Math.random() * Math.PI * 2,
-          wobble: Math.random() * Math.PI * 2,
-          settled: false,
-          slot: null
-        });
+      if (b.mode === "settled") {
+        drawSoftCell(b, i);
       }
     }
 
-    /* ========= 泡泡运动和堆积 ========= */
-    function trySettleBubble(b) {
-      if (b.settled) return;
+    for (let i = 0; i < bubbles.length; i++) {
+      const b = bubbles[i];
 
-      const freeSlot = getFreeSlot();
-      if (!freeSlot) return;
-
-      freeSlot.used = true;
-      freeSlot.bubbleId = b.id;
-      b.slot = freeSlot;
-      b.settled = true;
-      b.vx *= 0.2;
-      b.vy *= 0.2;
-    }
-
-    function updateBubbles() {
-      const settleZoneX = W * 0.48;
-
-      for (let i = 0; i < bubbles.length; i++) {
-        const b = bubbles[i];
-
-        b.rot += 0.01;
-        b.wobble += 0.03;
-
-        if (!b.settled) {
-          b.x += b.vx;
-          b.y += b.vy;
-
-          b.vx *= 0.992;
-          b.vy *= 0.992;
-
-          /* 有轻微漂浮感 */
-          b.vy += Math.sin(performance.now() * 0.001 + b.id) * 0.003;
-
-          /* 到达堆积区域后开始堆积 */
-          if (b.x > settleZoneX) {
-            trySettleBubble(b);
-          } else {
-            /* 如果碰到已经堆好的泡泡，也会加入堆积 */
-            for (let j = 0; j < bubbles.length; j++) {
-              if (i === j) continue;
-              const other = bubbles[j];
-              if (!other.settled) continue;
-
-              if (dist(b.x, b.y, other.x, other.y) < b.r + other.r + 4) {
-                trySettleBubble(b);
-                break;
-              }
-            }
-          }
-        } else if (b.slot) {
-          const dx = b.slot.x - b.x;
-          const dy = b.slot.y - b.y;
-
-          b.vx += dx * 0.03;
-          b.vy += dy * 0.03;
-
-          b.vx *= 0.82;
-          b.vy *= 0.82;
-
-          b.x += b.vx;
-          b.y += b.vy;
-        }
-      }
-
-      /* 堆积泡泡之间轻微分离，避免过硬 */
-      for (let i = 0; i < bubbles.length; i++) {
-        const a = bubbles[i];
-        if (!a.settled) continue;
-
-        for (let j = i + 1; j < bubbles.length; j++) {
-          const b = bubbles[j];
-          if (!b.settled) continue;
-
-          const dx = b.x - a.x;
-          const dy = b.y - a.y;
-          const d = Math.hypot(dx, dy);
-          const minD = a.r * 1.55;
-
-          if (d > 0 && d < minD) {
-            const overlap = (minD - d) * 0.06;
-            const nx = dx / d;
-            const ny = dy / d;
-
-            a.x -= nx * overlap;
-            a.y -= ny * overlap;
-            b.x += nx * overlap;
-            b.y += ny * overlap;
-          }
-        }
+      if (b.mode === "flying" || b.mode === "free") {
+        drawFlyingCircle(b);
       }
     }
 
-    /* ========= 炸泡泡 ========= */
-    function popBubble(index) {
-      const b = bubbles[index];
-      releaseSlot(b);
+    drawParticles();
+    drawNozzle();
+    drawPin();
+  }
 
-      for (let i = 0; i < 12; i++) {
-        particles.push({
-          x: b.x,
-          y: b.y,
-          vx: (Math.random() - 0.5) * 3.5,
-          vy: (Math.random() - 0.5) * 3.5,
-          r: 1.8 + Math.random() * 1.5,
-          life: 28 + Math.random() * 10,
-          maxLife: 38,
-          color: rainbow[Math.floor(Math.random() * rainbow.length)]
-        });
-      }
+  canvas.addEventListener("pointerdown", (e) => {
+    const p = getPointer(e);
+    mouse.x = p.x;
+    mouse.y = p.y;
 
-      bubbles.splice(index, 1);
+    if (hitNozzle(p.x, p.y)) {
+      dragTarget = "nozzle";
+      nozzle.offsetX = p.x - nozzle.x;
+      nozzle.offsetY = p.y - nozzle.y;
+      nozzle.oldX = nozzle.x;
+      nozzle.oldY = nozzle.y;
+    } else if (hitPin(p.x, p.y)) {
+      dragTarget = "pin";
+      pin.offsetX = p.x - pin.x;
+      pin.offsetY = p.y - pin.y;
     }
 
-    function updatePinPop() {
-      const tip = getPinTip();
+    canvas.setPointerCapture(e.pointerId);
+  });
 
-      for (let i = bubbles.length - 1; i >= 0; i--) {
-        const b = bubbles[i];
-        if (dist(tip.x, tip.y, b.x, b.y) < b.r + 5) {
-          popBubble(i);
-        }
-      }
-    }
+  canvas.addEventListener("pointermove", (e) => {
+    const p = getPointer(e);
+    mouse.x = p.x;
+    mouse.y = p.y;
 
-    function updateParticles() {
-      for (let i = particles.length - 1; i >= 0; i--) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
-        p.vx *= 0.96;
-        p.vy *= 0.96;
-        p.life--;
+    if (dragTarget === "nozzle") {
+      const newX = clamp(p.x - nozzle.offsetX, 50, W - 50);
+      const newY = clamp(p.y - nozzle.offsetY, 50, H - 50);
 
-        if (p.life <= 0) {
-          particles.splice(i, 1);
-        }
-      }
-    }
+      const dx = newX - nozzle.x;
+      const dy = newY - nozzle.y;
 
-    /* ========= 自动吐泡泡 + 挥动增强 ========= */
-    function updateEmission(now) {
-      let interval = 220;
+      nozzle.speed = Math.hypot(dx, dy);
 
-      if (draggingTarget === "nozzle") {
-        interval = clamp(220 - nozzle.speed * 18, 50, 220);
+      if (nozzle.speed > 0.4) {
+        nozzle.angle = Math.atan2(dy, dx);
       }
 
-      if (now - lastEmitTime > interval) {
-        emitBubble();
-        lastEmitTime = now;
+      nozzle.x = newX;
+      nozzle.y = newY;
+    }
+
+    if (dragTarget === "pin") {
+      const newX = clamp(p.x - pin.offsetX, 50, W - 50);
+      const newY = clamp(p.y - pin.offsetY, 50, H - 50);
+
+      const dx = newX - pin.x;
+      const dy = newY - pin.y;
+
+      if (Math.hypot(dx, dy) > 0.5) {
+        pin.angle = Math.atan2(dy, dx);
       }
 
-      nozzle.speed *= 0.9;
+      pin.x = newX;
+      pin.y = newY;
     }
 
-    /* ========= 绘制 ========= */
-    function draw() {
-      ctx.clearRect(0, 0, W, H);
-
-      for (let i = 0; i < bubbles.length; i++) {
-        drawSoftBubble(bubbles[i]);
-      }
-
-      drawParticles();
-      drawNozzle();
-      drawPin();
+    if (hitNozzle(p.x, p.y) || hitPin(p.x, p.y) || dragTarget) {
+      canvas.style.cursor = "grab";
+    } else {
+      canvas.style.cursor = "default";
     }
+  });
 
-    function animate(now = 0) {
-      updateEmission(now);
-      updateBubbles();
-      updatePinPop();
-      updateParticles();
-      draw();
-      animationId = requestAnimationFrame(animate);
-    }
+  canvas.addEventListener("pointerup", (e) => {
+    dragTarget = null;
+    nozzle.speed = 0;
+    canvas.releasePointerCapture(e.pointerId);
+  });
 
-    window.addEventListener("resize", resizeCanvas);
+  canvas.addEventListener("pointercancel", () => {
+    dragTarget = null;
+    nozzle.speed = 0;
+  });
 
-    resizeCanvas();
-    animate();
-  </script>
+  function animate(now = 0) {
+    time++;
+
+    updateEmission(now);
+    updateBubbles();
+    updatePinPop();
+    updateParticles();
+    draw();
+
+    requestAnimationFrame(animate);
+  }
+
+  resizeCanvas();
+  animate();
+</script>
 </body>
 </html>
