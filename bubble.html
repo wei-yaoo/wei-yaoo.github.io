@@ -1,401 +1,274 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Channel - 魏瑶的个人网页</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bubble Interaction</title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #ffffff;
+    }
 
-        body {
-            font-family: 'Inter', "Microsoft YaHei", sans-serif;
-            background: linear-gradient(135deg, #eef2ff, #f8fafc);
-            color: #333333;
-            line-height: 1.6;
-        }
-
-        /* 顶部大图区域 */
-        .hero-section {
-            position: relative;
-            height: 520px;
-            background: url('background.jpg') no-repeat center center/cover;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            color: white;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
-        }
-
-        .hero-section::after {
-            content: "";
-            position: absolute;
-            left: 0;
-            bottom: 0;
-            width: 100%;
-            height: 150px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0), #050505);
-            z-index: 1;
-        }
-
-        .navbar {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 28px 42px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.45), rgba(0,0,0,0));
-        }
-
-        .nav-logo {
-            font-size: 22px;
-            font-weight: bold;
-            letter-spacing: 0.5px;
-        }
-
-        .nav-links {
-            display: flex;
-            list-style: none;
-            gap: 28px;
-        }
-
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            font-size: 15px;
-            font-weight: 500;
-            transition: opacity 0.2s;
-        }
-
-        .nav-links a:hover {
-            opacity: 0.8;
-        }
-
-        .hero-title-box {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            margin-bottom: 105px;
-        }
-
-        .hero-title {
-            font-size: 48px;
-            font-weight: 800;
-            margin-bottom: 10px;
-            letter-spacing: 1px;
-        }
-
-        .hero-subtitle {
-            font-size: 18px;
-            opacity: 0.95;
-            letter-spacing: 0.5px;
-        }
-
-        /* WELCOME 文字交互效果区域 */
-        .text-effect-section {
-            width: 100%;
-            height: 540px;
-            background: linear-gradient(
-                180deg,
-                #050505 0%,
-                #201713 10%,
-                #fff4df 30%,
-                #fff4df 100%
-            );
-            overflow: hidden;
-        }
-
-        .text-effect-section iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
-
-        /* 气泡互动效果区域 */
-        .bubble-section {
-            width: 100%;
-            height: 560px;
-            background: linear-gradient(
-                180deg,
-                #fff4df 0%,
-                #ffffff 18%,
-                #ffffff 100%
-            );
-            overflow: hidden;
-        }
-
-        .bubble-section iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
-
-        /* About Me 内容区域 */
-        .container {
-            max-width: 950px;
-            margin: -20px auto 40px auto;
-            padding: 0 20px;
-            position: relative;
-            z-index: 10;
-        }
-
-        .content-card {
-            background-color: white;
-            padding: 40px;
-            border-radius: 18px;
-            box-shadow: 0 18px 45px rgba(0,0,0,0.08);
-        }
-
-        .section-title {
-            font-size: 26px;
-            color: #111111;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .section-divider {
-            height: 2px;
-            background-color: #f0f2f5;
-            margin-bottom: 35px;
-        }
-
-        .profile-grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 45px;
-            align-items: start;
-        }
-
-        .avatar-box {
-            position: relative;
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.1), 0 4px 12px rgba(0,0,0,0.05);
-            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-            animation: avatarBreath 6s ease-in-out infinite alternate;
-        }
-
-        .avatar-box img {
-            width: 100%;
-            height: auto;
-            border-radius: 14px;
-            display: block;
-            transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
-        }
-
-        .avatar-box:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 35px rgba(79, 70, 229, 0.18), 0 10px 20px rgba(0,0,0,0.08);
-        }
-
-        .avatar-box:hover img {
-            transform: scale(1.05);
-        }
-
-        @keyframes avatarBreath {
-            0% {
-                transform: scale(1);
-            }
-            100% {
-                transform: scale(1.015) translateY(-2px);
-                box-shadow: 0 12px 28px rgba(79, 70, 229, 0.13), 0 6px 14px rgba(0,0,0,0.06);
-            }
-        }
-
-        .info-box h3 {
-            font-size: 32px;
-            font-weight: 700;
-            color: #111111;
-            margin-bottom: 6px;
-        }
-
-        .info-tagline {
-            font-size: 15px;
-            color: #ff4757;
-            font-weight: 600;
-            margin-bottom: 22px;
-        }
-
-        .info-text {
-            font-size: 15px;
-            color: #555555;
-            margin-bottom: 16px;
-            text-align: justify;
-        }
-
-        h4 {
-            color: #4f46e5;
-            margin-top: 28px;
-            margin-bottom: 12px;
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .interests-tags {
-            list-style: none;
-            padding: 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-
-        .interests-tags li {
-            background: #f1f2f6;
-            padding: 6px 16px;
-            border-radius: 20px;
-            font-size: 13px;
-            color: #57606f;
-            font-weight: 500;
-            transition: all 0.2s;
-            cursor: default;
-        }
-
-        .interests-tags li:hover {
-            background: #4f46e5;
-            color: white;
-            transform: scale(1.05);
-        }
-
-        .contact-text {
-            font-size: 15px;
-            color: #444444;
-            font-weight: 500;
-        }
-
-        .footer {
-            text-align: center;
-            margin-top: 45px;
-            color: #b2bec3;
-            font-size: 13px;
-        }
-
-        @media (max-width: 768px) {
-            .profile-grid {
-                grid-template-columns: 1fr;
-                gap: 30px;
-            }
-
-            .hero-section {
-                height: 420px;
-            }
-
-            .hero-title {
-                font-size: 34px;
-            }
-
-            .hero-subtitle {
-                font-size: 15px;
-            }
-
-            .navbar {
-                padding: 18px 22px;
-            }
-
-            .nav-links {
-                gap: 12px;
-            }
-
-            .nav-links a {
-                font-size: 12px;
-            }
-
-            .text-effect-section {
-                height: 420px;
-            }
-
-            .bubble-section {
-                height: 420px;
-            }
-
-            .container {
-                margin-top: -10px;
-            }
-
-            .avatar-box:hover {
-                transform: none;
-            }
-
-            .avatar-box:hover img {
-                transform: none;
-            }
-        }
-    </style>
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      background: #ffffff;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
 
-    <header class="hero-section">
-        <nav class="navbar">
-            <div class="nav-logo">❤ My Channel</div>
-            <ul class="nav-links">
-                <li><a href="#">ME</a></li>
-                <li><a href="#">Information</a></li>
-                <li><a href="#">Interests</a></li>
-                <li><a href="#">Friends</a></li>
-            </ul>
-        </nav>
+  <canvas id="bubbleCanvas"></canvas>
 
-        <div class="hero-title-box">
-            <h1 class="hero-title">I'm the protagonist.</h1>
-            <p class="hero-subtitle">Hakuna Matata</p>
-        </div>
-    </header>
+  <script>
+    const canvas = document.getElementById("bubbleCanvas");
+    const ctx = canvas.getContext("2d");
 
-    <!-- WELCOME 文字交互效果区域 -->
-    <section class="text-effect-section">
-        <iframe src="text-effect.html" title="WELCOME 文字交互效果"></iframe>
-    </section>
+    let width;
+    let height;
+    let time = 0;
 
-    <!-- 气泡互动效果区域 -->
-    <section class="bubble-section">
-        <iframe src="bubble.html" title="气泡互动效果"></iframe>
-    </section>
+    let mouse = {
+      x: 0,
+      y: 0
+    };
 
-    <div class="container">
-        <div class="content-card">
+    let cluster = {
+      x: 0,
+      y: 0
+    };
 
-            <h2 class="section-title">About Me</h2>
-            <div class="section-divider"></div>
+    let floatingBubbles = [];
 
-            <div class="profile-grid">
+    const colors = [
+      "#1616a8",
+      "#1e90ff",
+      "#ff3bbf",
+      "#ff7a00",
+      "#39c94a",
+      "#00bfa6",
+      "#8b3cff"
+    ];
 
-                <div class="avatar-box">
-                    <img src="avatar.jpg" alt="魏瑶的卡通头像">
-                </div>
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
 
-                <div class="info-box">
-                    <h3>魏瑶 (Siri)</h3>
-                    <p class="info-tagline">(努力学习版 活跃版 快乐版)</p>
+      mouse.x = width * 0.68;
+      mouse.y = height * 0.5;
 
-                    <p class="info-text">Hello，我是一个普通的工业设计工程学生。欢迎来到我的个人频道！</p>
-                    <p class="info-text">我喜欢天马行空的幻想，致力于用现代设计手法把有趣的想法带进首饰。本身并不是个绝对的 cute girl，我更努力想成为一个 cool girl。时常安静时常发疯是我的日常，反正开心就好了！</p>
+      cluster.x = mouse.x;
+      cluster.y = mouse.y;
+    }
 
-                    <h4>我的兴趣 / Interests</h4>
-                    <ul class="interests-tags">
-                        <li>🎨 画面</li>
-                        <li>✈️ 旅行</li>
-                        <li>📷 影像摄影</li>
-                    </ul>
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
 
-                    <h4>联系方式 / Contact</h4>
-                    <p class="contact-text">📧 邮箱：2544393568@qq.com</p>
-                </div>
+    window.addEventListener("mousemove", function(event) {
+      mouse.x = event.clientX;
+      mouse.y = event.clientY;
+    });
 
-            </div>
+    window.addEventListener("click", function() {
+      for (let i = 0; i < 16; i++) {
+        createFloatingBubble();
+      }
+    });
 
-        </div>
+    function drawMultiColorCircle(x, y, r, lineWidth = 3) {
+      const part = Math.PI * 2 / colors.length;
 
-        <div class="footer">
-            <p>&copy; 2026 我的个人网页 | Powered by GitHub Pages</p>
-        </div>
-    </div>
+      for (let i = 0; i < colors.length; i++) {
+        ctx.beginPath();
+        ctx.arc(x, y, r, i * part, (i + 1.1) * part);
+        ctx.strokeStyle = colors[i];
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = "round";
+        ctx.stroke();
+      }
+    }
+
+    function drawMultiColorLine(x1, y1, x2, y2, colorIndex, lineWidth = 3) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.strokeStyle = colors[colorIndex % colors.length];
+      ctx.lineWidth = lineWidth;
+      ctx.lineCap = "round";
+      ctx.stroke();
+    }
+
+    function drawPolygon(points, lineWidth = 3) {
+      for (let i = 0; i < points.length; i++) {
+        const p1 = points[i];
+        const p2 = points[(i + 1) % points.length];
+
+        ctx.beginPath();
+        ctx.moveTo(p1.x, p1.y);
+        ctx.lineTo(p2.x, p2.y);
+        ctx.strokeStyle = colors[i % colors.length];
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = "round";
+        ctx.stroke();
+      }
+    }
+
+    function createHexagon(cx, cy, r, wobbleSeed) {
+      const points = [];
+
+      for (let i = 0; i < 6; i++) {
+        const angle = Math.PI / 3 * i + Math.PI / 6;
+        const wobble = Math.sin(time * 0.035 + i * 1.4 + wobbleSeed) * 2.2;
+
+        points.push({
+          x: cx + Math.cos(angle) * (r + wobble),
+          y: cy + Math.sin(angle) * (r + wobble)
+        });
+      }
+
+      return points;
+    }
+
+    function drawBubbleTool() {
+      const baseX = width * 0.22;
+      const baseY = height * 0.52;
+
+      // 左边双圆
+      drawMultiColorCircle(baseX - 130, baseY - 35, 18, 2.5);
+      drawMultiColorCircle(baseX - 130, baseY + 10, 18, 2.5);
+
+      // 手柄
+      drawMultiColorLine(baseX - 38, baseY + 28, baseX - 38, baseY + 125, 0, 3);
+
+      // 圆形吹泡泡口
+      drawMultiColorCircle(baseX - 20, baseY, 32, 3);
+
+      // 喇叭形出口
+      drawMultiColorLine(baseX - 18, baseY - 32, baseX + 70, baseY - 14, 0, 3);
+      drawMultiColorLine(baseX - 18, baseY + 32, baseX + 70, baseY + 14, 4, 3);
+      drawMultiColorLine(baseX + 70, baseY - 14, baseX + 70, baseY + 14, 3, 3);
+
+      // 出口小线条
+      drawMultiColorLine(baseX + 92, baseY - 8, baseX + 126, baseY - 2, 3, 3);
+      drawMultiColorLine(baseX + 126, baseY - 2, baseX + 154, baseY - 12, 2, 3);
+      drawMultiColorLine(baseX + 154, baseY - 12, baseX + 174, baseY + 4, 5, 3);
+    }
+
+    function drawMiddleSmallBubbles() {
+      const startX = width * 0.22 + 210;
+      const startY = height * 0.52;
+
+      for (let i = 0; i < 4; i++) {
+        const x = startX + i * 52;
+        const y = startY + Math.sin(time * 0.05 + i * 1.5) * 12;
+        drawMultiColorCircle(x, y, 15, 2.5);
+      }
+    }
+
+    function createFloatingBubble() {
+      const startX = width * 0.22 + 170;
+      const startY = height * 0.52;
+
+      floatingBubbles.push({
+        x: startX,
+        y: startY + (Math.random() - 0.5) * 30,
+        r: Math.random() * 10 + 8,
+        vx: Math.random() * 2 + 1,
+        vy: (Math.random() - 0.5) * 1.6,
+        life: 1
+      });
+    }
+
+    function updateFloatingBubbles() {
+      if (Math.random() < 0.08) {
+        createFloatingBubble();
+      }
+
+      for (let bubble of floatingBubbles) {
+        const dx = cluster.x - bubble.x;
+        const dy = cluster.y - bubble.y;
+
+        bubble.vx += dx * 0.0007;
+        bubble.vy += dy * 0.0007;
+
+        bubble.x += bubble.vx;
+        bubble.y += bubble.vy;
+
+        bubble.life -= 0.004;
+      }
+
+      floatingBubbles = floatingBubbles.filter(bubble => bubble.life > 0);
+    }
+
+    function drawFloatingBubbles() {
+      for (let bubble of floatingBubbles) {
+        ctx.globalAlpha = bubble.life;
+        drawMultiColorCircle(bubble.x, bubble.y, bubble.r, 2.2);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    function drawFoamCluster() {
+      cluster.x += (mouse.x - cluster.x) * 0.045;
+      cluster.y += (mouse.y - cluster.y) * 0.045;
+
+      const cell = 34;
+      const radiusX = 185;
+      const radiusY = 118;
+
+      for (let row = -5; row <= 5; row++) {
+        for (let col = -8; col <= 8; col++) {
+          const offsetX = row % 2 === 0 ? 0 : cell * 0.5;
+
+          const x = cluster.x + col * cell + offsetX;
+          const y = cluster.y + row * cell * 0.86;
+
+          const dx = (x - cluster.x) / radiusX;
+          const dy = (y - cluster.y) / radiusY;
+
+          const distance = dx * dx + dy * dy;
+          const edge = Math.sin(col * 1.7 + row * 2.2 + time * 0.025) * 0.18;
+
+          if (distance < 1 + edge) {
+            const points = createHexagon(x, y, cell * 0.56, col * 0.7 + row * 1.2);
+            drawPolygon(points, 3);
+          }
+        }
+      }
+
+      // 外围较大泡泡，让形态更像参考图
+      drawMultiColorCircle(cluster.x + radiusX * 0.55, cluster.y + 42, 58, 3);
+      drawMultiColorCircle(cluster.x + radiusX * 0.74, cluster.y - 35, 34, 3);
+      drawMultiColorCircle(cluster.x - radiusX * 0.78, cluster.y - 20, 26, 3);
+    }
+
+    function animate() {
+      time++;
+
+      ctx.clearRect(0, 0, width, height);
+
+      drawBubbleTool();
+      drawMiddleSmallBubbles();
+      drawFoamCluster();
+
+      updateFloatingBubbles();
+      drawFloatingBubbles();
+
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+  </script>
 
 </body>
 </html>
