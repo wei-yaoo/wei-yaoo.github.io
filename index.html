@@ -101,7 +101,7 @@
                 linear-gradient(90deg, #020202, #151515 48%, #020202);
             box-shadow: 0 14px 24px rgba(0,0,0,0.42), inset 0 0 0 1px rgba(255,255,255,0.08);
             transform: translateX(-50%);
-            z-index: 3;
+            z-index: 5;
         }
 
         .intro-anchor::after {
@@ -124,7 +124,17 @@
             height: 100%;
             overflow: visible;
             pointer-events: none;
+            z-index: 2;
+        }
+
+        .ballpit-canvas {
+            position: absolute;
+            inset: 0;
             z-index: 1;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.94;
         }
 
         .intro-rope path {
@@ -142,7 +152,7 @@
             position: absolute;
             left: 50%;
             top: 188px;
-            z-index: 2;
+            z-index: 4;
             width: min(64vw, 230px);
             aspect-ratio: 0.72;
             border: 0;
@@ -879,6 +889,7 @@
 
     <section class="intro-screen" aria-label="鐐瑰嚮鎸傜怀鍗＄墖杩涘叆涓汉浠嬬粛">
         <div class="intro-lanyard-stage">
+            <canvas class="ballpit-canvas" aria-hidden="true"></canvas>
             <div class="intro-anchor" aria-hidden="true"></div>
             <svg class="intro-rope" viewBox="0 0 430 620" preserveAspectRatio="none" aria-hidden="true">
                 <path d="M215 34 C188 112, 158 154, 168 230 C177 296, 205 330, 215 386 C225 330, 253 296, 262 230 C272 154, 242 112, 215 34" />
@@ -934,11 +945,154 @@
     </div>
     </main>
     <script>
+        function initIntroBallpit() {
+            const canvas = document.querySelector(".ballpit-canvas");
+            const stage = document.querySelector(".intro-lanyard-stage");
+
+            if (!canvas || !stage) {
+                return null;
+            }
+
+            const ctx = canvas.getContext("2d");
+            const balls = [];
+            const palette = ["#ffffff", "#f6f1ff", "#d9ccff", "#b7f3ff", "#ffe2f0", "#fff3b8"];
+            let width = 0;
+            let height = 0;
+            let dpr = 1;
+            let lastImpactProgress = 0;
+            let burstDone = false;
+
+            const rand = (min, max) => Math.random() * (max - min) + min;
+
+            const resize = () => {
+                const rect = stage.getBoundingClientRect();
+                dpr = Math.min(window.devicePixelRatio || 1, 2);
+                width = Math.max(1, rect.width);
+                height = Math.max(1, rect.height);
+                canvas.width = Math.round(width * dpr);
+                canvas.height = Math.round(height * dpr);
+                canvas.style.width = `${width}px`;
+                canvas.style.height = `${height}px`;
+                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+                if (!balls.length) {
+                    const count = window.innerWidth < 768 ? 46 : 76;
+                    for (let i = 0; i < count; i++) {
+                        balls.push({
+                            x: rand(28, width - 28),
+                            y: rand(height * 0.46, height - 28),
+                            vx: rand(-0.55, 0.55),
+                            vy: rand(-0.35, 0.35),
+                            r: rand(8, 18),
+                            color: palette[i % palette.length],
+                            shine: rand(0.15, 0.42)
+                        });
+                    }
+                }
+            };
+
+            const impact = (cardRect, progress) => {
+                const stageRect = stage.getBoundingClientRect();
+                const cardCenterX = cardRect.left - stageRect.left + cardRect.width / 2;
+                const cardBottomY = cardRect.bottom - stageRect.top;
+                const delta = Math.max(0, progress - lastImpactProgress);
+                lastImpactProgress = progress;
+
+                const strength = delta * 95 + (progress > 0.2 && progress < 0.94 ? 1.6 : 0);
+
+                for (const ball of balls) {
+                    const dx = ball.x - cardCenterX;
+                    const dy = ball.y - cardBottomY;
+                    const distance = Math.hypot(dx, dy);
+                    const reach = cardRect.width * 0.68 + ball.r;
+
+                    if (distance < reach) {
+                        const force = (1 - distance / reach) * strength;
+                        const angle = Math.atan2(dy || -1, dx || 1);
+                        ball.vx += Math.cos(angle) * force + rand(-0.7, 0.7);
+                        ball.vy += Math.sin(angle) * force - force * 0.9 - rand(0.4, 1.2);
+                    }
+                }
+
+                if (progress > 0.86 && !burstDone) {
+                    burstDone = true;
+                    for (const ball of balls) {
+                        const dx = ball.x - cardCenterX;
+                        const dy = ball.y - cardBottomY;
+                        const distance = Math.max(24, Math.hypot(dx, dy));
+                        const force = Math.max(0, 7.5 - distance * 0.012);
+                        ball.vx += (dx / distance) * force + rand(-2, 2);
+                        ball.vy += (dy / distance) * force - rand(2, 5);
+                    }
+                }
+
+                if (progress < 0.2) {
+                    burstDone = false;
+                }
+            };
+
+            const step = () => {
+                ctx.clearRect(0, 0, width, height);
+
+                for (const ball of balls) {
+                    ball.vy += 0.12;
+                    ball.vx *= 0.992;
+                    ball.vy *= 0.992;
+                    ball.x += ball.vx;
+                    ball.y += ball.vy;
+
+                    if (ball.x - ball.r < 0) {
+                        ball.x = ball.r;
+                        ball.vx *= -0.82;
+                    }
+                    if (ball.x + ball.r > width) {
+                        ball.x = width - ball.r;
+                        ball.vx *= -0.82;
+                    }
+                    if (ball.y - ball.r < 0) {
+                        ball.y = ball.r;
+                        ball.vy *= -0.75;
+                    }
+                    if (ball.y + ball.r > height) {
+                        ball.y = height - ball.r;
+                        ball.vy *= -0.72;
+                        ball.vx *= 0.88;
+                    }
+
+                    const gradient = ctx.createRadialGradient(
+                        ball.x - ball.r * 0.35,
+                        ball.y - ball.r * 0.45,
+                        ball.r * 0.2,
+                        ball.x,
+                        ball.y,
+                        ball.r
+                    );
+                    gradient.addColorStop(0, "#ffffff");
+                    gradient.addColorStop(ball.shine, ball.color);
+                    gradient.addColorStop(1, "rgba(120, 105, 165, 0.72)");
+
+                    ctx.beginPath();
+                    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+                    ctx.fillStyle = gradient;
+                    ctx.fill();
+                }
+
+                requestAnimationFrame(step);
+            };
+
+            resize();
+            window.addEventListener("resize", resize);
+            step();
+
+            return { impact };
+        }
+
         window.addEventListener("load", () => {
             const introScreen = document.querySelector(".intro-screen");
             const introCard = document.querySelector(".intro-card");
             const introRope = document.querySelector(".intro-rope path");
             const aboutSection = document.querySelector(".container");
+            const introBallpit = initIntroBallpit();
 
             if (!introScreen || !introCard || !introRope) {
                 return;
@@ -971,6 +1125,7 @@
                 introCard.style.transform = `translate(-50%, ${y}vh) rotate(${rotate}deg)`;
                 introRope.style.transform = `translateY(${ropeY}vh) scaleY(${ropeScale})`;
                 introRope.style.opacity = `${clampValue(progress * 1.45, 0, 1)}`;
+                introBallpit?.impact(introCard.getBoundingClientRect(), progress);
 
                 if (progress >= 0.98) {
                     canEnter = true;
