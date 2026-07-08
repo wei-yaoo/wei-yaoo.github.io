@@ -16,9 +16,7 @@
 
         body {
             font-family: 'Inter', "Microsoft YaHei", sans-serif;
-            background:
-                linear-gradient(rgba(3, 5, 12, 0.22), rgba(3, 5, 12, 0.48)),
-                url('about-background.jpg') center center / cover fixed no-repeat;
+            background: #03040a;
             color: #333333;
             line-height: 1.6;
         }
@@ -200,12 +198,25 @@
         /* About Me 鍐呭鍖哄煙 */
         .container {
             max-width: 1180px;
-            margin: -20px auto 40px auto;
-            padding: 0 20px;
+            margin: 0 auto;
+            padding: 44px 20px;
             position: relative;
             z-index: 10;
             opacity: 1;
             transform: translateY(0);
+        }
+
+        .page-band {
+            position: relative;
+            min-height: 100vh;
+            background:
+                linear-gradient(rgba(3,5,12,0.22), rgba(3,5,12,0.48)),
+                url('about-background.jpg') center center / cover no-repeat;
+        }
+
+        .hobbies-band {
+            border-top: 1px solid rgba(255,255,255,0.18);
+            background-position: center center;
         }
 
         .content-card {
@@ -399,17 +410,6 @@
             opacity: 0;
         }
 
-        .about-photo-frame::after {
-            content: "";
-            position: absolute;
-            right: 18px;
-            bottom: 18px;
-            width: 24px;
-            height: 24px;
-            background: rgba(255,255,255,0.78);
-            clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
-        }
-
         .about-photo-frame:hover .about-photo-default {
             opacity: 0;
             transform: scale(1.035);
@@ -523,9 +523,9 @@
         }
 
         .hobbies-section {
-            margin-top: 44px;
-            padding-top: 34px;
-            border-top: 1px solid rgba(255,255,255,0.72);
+            margin-top: 0;
+            padding-top: 0;
+            border-top: 0;
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 26px;
@@ -670,13 +670,6 @@
             font-weight: 500;
         }
 
-        .footer {
-            text-align: center;
-            margin-top: 45px;
-            color: #b2bec3;
-            font-size: 13px;
-        }
-
         @media (max-width: 768px) {
             .profile-grid {
                 grid-template-columns: 1fr;
@@ -722,7 +715,7 @@
             }
 
             .container {
-                margin-top: -10px;
+                padding: 28px 14px;
             }
 
             .hobbies-section {
@@ -786,8 +779,9 @@
         </header>
     </div>
 
-    <div class="container" id="about">
-        <div class="content-card">
+    <section class="page-band about-band" id="about">
+        <div class="container">
+            <div class="content-card">
 
             <h2 class="section-title">About Me</h2>
             <div class="section-divider"></div>
@@ -810,7 +804,14 @@
 
             </div>
 
-            <section class="hobbies-section" aria-labelledby="hobbies-title">
+            </div>
+        </div>
+    </section>
+
+    <section class="page-band hobbies-band">
+        <div class="container">
+            <div class="content-card hobbies-card">
+              <section class="hobbies-section" aria-labelledby="hobbies-title">
                 <h2 class="hobbies-title" id="hobbies-title">我的爱好</h2>
 
                 <article class="hobby-row">
@@ -851,14 +852,10 @@
                         <figure class="stack-card"><img src="assets/hobbies/travel/card-4.jpg" alt="旅游照片 4"></figure>
                     </div>
                 </article>
-            </section>
-
+              </section>
+            </div>
         </div>
-
-        <div class="footer">
-            <p>&copy; 2026 魏瑶 | Powered by GitHub Pages</p>
-        </div>
-    </div>
+    </section>
     </main>
     <script>
         window.addEventListener("load", () => {
