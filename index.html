@@ -197,7 +197,7 @@
 
         /* About Me 鍐呭鍖哄煙 */
         .container {
-            max-width: 950px;
+            max-width: 1180px;
             margin: -20px auto 40px auto;
             padding: 0 20px;
             position: relative;
@@ -507,27 +507,28 @@
             margin-top: 44px;
             padding-top: 34px;
             border-top: 2px solid #f0f2f5;
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 26px;
         }
 
         .hobbies-title {
+            grid-column: 1 / -1;
             font-size: 26px;
             color: #111111;
-            margin-bottom: 28px;
+            margin-bottom: 2px;
             font-weight: 700;
         }
 
         .hobby-row {
-            display: grid;
-            grid-template-columns: minmax(160px, 0.45fr) minmax(260px, 1fr);
-            gap: 34px;
-            align-items: center;
-            padding: 30px 0;
-            border-top: 1px solid #f1f2f6;
-        }
-
-        .hobby-row:first-of-type {
-            border-top: 0;
-            padding-top: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            min-width: 0;
+            padding: 22px;
+            border: 1px solid #f1f2f6;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #ffffff, #fbfcff);
         }
 
         .hobby-copy h4 {
@@ -541,13 +542,13 @@
             color: #666666;
             font-size: 15px;
             line-height: 1.75;
+            min-height: 78px;
         }
 
         .stack-gallery {
             position: relative;
-            width: min(100%, 470px);
-            height: 300px;
-            justify-self: end;
+            width: 100%;
+            height: 245px;
             perspective: 900px;
             cursor: pointer;
         }
@@ -703,12 +704,16 @@
             .hobbies-section {
                 margin-top: 34px;
                 padding-top: 26px;
+                grid-template-columns: 1fr;
             }
 
             .hobby-row {
-                grid-template-columns: 1fr;
                 gap: 18px;
                 padding: 26px 0;
+                border-width: 0;
+                border-top: 1px solid #f1f2f6;
+                border-radius: 0;
+                background: transparent;
             }
 
             .stack-gallery {
