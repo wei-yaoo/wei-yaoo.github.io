@@ -31,7 +31,7 @@
             display: grid;
             place-items: center;
             min-height: 185vh;
-            background: #2d2838;
+            background: #000000;
             overflow: hidden;
             transition: opacity 0.7s ease, visibility 0.7s ease, transform 0.7s ease;
         }
@@ -141,14 +141,14 @@
         .intro-card {
             position: absolute;
             left: 50%;
-            top: 238px;
+            top: 188px;
             z-index: 2;
             width: min(64vw, 230px);
             aspect-ratio: 0.72;
             border: 0;
             background: transparent;
             cursor: default;
-            transform: translate(-50%, -86vh) rotate(-18deg);
+            transform: translate(-50%, -72vh) rotate(-18deg);
             transform-origin: 50% -72px;
             will-change: transform;
         }
@@ -968,7 +968,7 @@
                     ? Math.sin((progress - 0.78) / 0.22 * Math.PI) * -12
                     : 0;
 
-                const y = -86 + eased * 86 + (overshoot + settle) / viewportHeight * 100;
+                const y = -72 + eased * 72 + (overshoot + settle) / viewportHeight * 100;
                 const rotate = -18 + eased * 16 + Math.sin(progress * Math.PI * 2.6) * (1 - progress) * 8;
                 const ropeY = -88 + eased * 88 + overshoot / viewportHeight * 100;
                 const ropeScale = 0.42 + eased * 0.58 + Math.max(0, Math.sin(progress * Math.PI)) * 0.08;
