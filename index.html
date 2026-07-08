@@ -605,6 +605,40 @@
             display: none;
         }
 
+        .about-photo-frame {
+            position: relative;
+            overflow: hidden;
+            border-radius: 22px;
+            background: #f8f4e8;
+            box-shadow: 0 18px 42px rgba(79,70,229,0.16);
+        }
+
+        .about-photo-frame img {
+            width: 100%;
+            aspect-ratio: 0.76;
+            object-fit: cover;
+            object-position: center top;
+            display: block;
+            transition: transform 0.35s ease;
+            user-select: none;
+            -webkit-user-drag: none;
+        }
+
+        .about-photo-frame::after {
+            content: "";
+            position: absolute;
+            right: 18px;
+            bottom: 18px;
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.78);
+            clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
+        }
+
+        .about-photo-frame:hover img {
+            transform: scale(1.035);
+        }
+
         .about-lanyard-card .lanyard-photo-card {
             padding: 18px 18px 70px;
             overflow: hidden;
@@ -872,27 +906,8 @@
 
             <div class="profile-grid">
 
-                <div class="lanyard-stage" aria-label="可拖拽头像挂绳卡片">
-                    <div class="lanyard-anchor" aria-hidden="true"></div>
-                    <svg class="lanyard-rope" viewBox="0 0 320 440" preserveAspectRatio="none" aria-hidden="true">
-                        <path class="lanyard-rope-line" d="M160 34 C145 82, 126 112, 130 150 C134 188, 156 212, 160 244 C164 212, 186 188, 190 150 C194 112, 175 82, 160 34" />
-                    </svg>
-                    <div class="lanyard-card about-lanyard-card" role="img" aria-label="魏瑶的头像挂绳卡片">
-                        <div class="lanyard-clip" aria-hidden="true"></div>
-                        <div class="lanyard-photo-card">
-                            <svg class="card-mark" viewBox="0 0 120 120" aria-hidden="true">
-                                <g fill="none" stroke="#050505" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-                                    <ellipse cx="60" cy="60" rx="46" ry="15" transform="rotate(0 60 60)" />
-                                    <ellipse cx="60" cy="60" rx="46" ry="15" transform="rotate(60 60 60)" />
-                                    <ellipse cx="60" cy="60" rx="46" ry="15" transform="rotate(120 60 60)" />
-                                    <circle cx="60" cy="60" r="5" fill="#050505" stroke="none" />
-                                </g>
-                            </svg>
-                            <img src="avatar.jpg" alt="魏瑶的卡通头像">
-                            <div class="lanyard-name">Siri</div>
-                            <div class="lanyard-role">MY CHANNEL</div>
-                        </div>
-                    </div>
+                <div class="about-photo-frame">
+                    <img src="avatar.jpg" alt="魏瑶的卡通头像">
                 </div>
 
                 <div class="info-box">
@@ -975,13 +990,20 @@
             window.addEventListener("scroll", updateIntroDrop, { passive: true });
             window.addEventListener("resize", updateIntroDrop);
 
-            introCard.addEventListener("click", () => {
-                if (!canEnter) {
+            const enterAbout = () => {
+                if (!canEnter && !introScreen.classList.contains("is-ready")) {
                     return;
                 }
 
                 document.body.classList.add("about-open");
                 aboutSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+            };
+
+            introCard.addEventListener("click", enterAbout);
+            introScreen.addEventListener("click", (event) => {
+                if (event.target.closest(".intro-card")) {
+                    enterAbout();
+                }
             });
         });
 
@@ -1066,10 +1088,6 @@
             const rope = document.querySelector(".lanyard-rope-line");
             const aboutCard = document.querySelector(".about-lanyard-card");
 
-            if (!stage || !card || !rope) {
-                return;
-            }
-
             aboutCard?.addEventListener("pointerenter", () => {
                 aboutCard.classList.add("is-waving");
             });
@@ -1077,6 +1095,10 @@
             aboutCard?.addEventListener("pointerleave", () => {
                 aboutCard.classList.remove("is-waving");
             });
+
+            if (!stage || !card || !rope) {
+                return;
+            }
 
             const state = {
                 x: 0,
