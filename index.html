@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Channel - 榄忕懚鐨勪釜浜虹綉椤?/title>
+    <title>My Channel - Wei Yao</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
@@ -21,230 +21,11 @@
             line-height: 1.6;
         }
 
-        body.intro-active {
-            overflow: auto;
-        }
-
-        .intro-screen {
-            position: relative;
-            z-index: 4;
-            display: grid;
-            place-items: center;
-            min-height: 185vh;
-            background: #000000;
-            overflow: hidden;
-            transition: opacity 0.7s ease, visibility 0.7s ease, transform 0.7s ease;
-        }
-
-        body.entered-site .intro-screen {
-            opacity: 1;
-            visibility: visible;
-            transform: none;
-            pointer-events: auto;
-        }
-
         .site-shell {
             opacity: 1;
             visibility: visible;
             transform: translateY(0);
             transition: opacity 0.8s ease, visibility 0.8s ease, transform 0.8s ease;
-        }
-
-        body.entered-site .site-shell {
-            opacity: 1;
-            visibility: visible;
-            transform: translateY(0);
-        }
-
-        .intro-lanyard-stage {
-            position: sticky;
-            top: 0;
-            width: min(86vw, 430px);
-            height: 100vh;
-            display: grid;
-            place-items: center;
-            overflow: visible;
-        }
-
-        .intro-lanyard-stage::before {
-            content: "WELCOME";
-            position: absolute;
-            left: 50%;
-            top: 45%;
-            z-index: 0;
-            color: rgba(255,255,255,0.055);
-            font-size: clamp(72px, 18vw, 150px);
-            font-weight: 900;
-            letter-spacing: 0.04em;
-            transform: translate(-50%, -50%);
-            pointer-events: none;
-            white-space: nowrap;
-        }
-
-        .intro-anchor {
-            position: absolute;
-            left: 50%;
-            top: -8px;
-            width: 58px;
-            height: 220px;
-            border-radius: 0 0 16px 16px;
-            background:
-                radial-gradient(circle at 50% 16%, #f8fafc 0 3px, transparent 4px),
-                radial-gradient(circle at 43% 19%, #f8fafc 0 2px, transparent 3px),
-                radial-gradient(circle at 57% 19%, #f8fafc 0 2px, transparent 3px),
-                radial-gradient(circle at 50% 48%, #f8fafc 0 3px, transparent 4px),
-                radial-gradient(circle at 43% 51%, #f8fafc 0 2px, transparent 3px),
-                radial-gradient(circle at 57% 51%, #f8fafc 0 2px, transparent 3px),
-                radial-gradient(circle at 50% 80%, #f8fafc 0 3px, transparent 4px),
-                radial-gradient(circle at 43% 83%, #f8fafc 0 2px, transparent 3px),
-                radial-gradient(circle at 57% 83%, #f8fafc 0 2px, transparent 3px),
-                linear-gradient(90deg, #020202, #151515 48%, #020202);
-            box-shadow: 0 14px 24px rgba(0,0,0,0.42), inset 0 0 0 1px rgba(255,255,255,0.08);
-            transform: translateX(-50%);
-            z-index: 5;
-        }
-
-        .intro-anchor::after {
-            content: "";
-            position: absolute;
-            left: 50%;
-            bottom: -14px;
-            width: 34px;
-            height: 24px;
-            border-radius: 8px;
-            background: linear-gradient(180deg, #1b1b1b, #050505);
-            box-shadow: 0 8px 14px rgba(0,0,0,0.38);
-            transform: translateX(-50%);
-        }
-
-        .intro-rope {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            overflow: visible;
-            pointer-events: none;
-            z-index: 2;
-        }
-
-        .ballpit-canvas {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            opacity: 0.94;
-        }
-
-        .intro-rope path {
-            fill: none;
-            stroke: #050505;
-            stroke-width: 8;
-            stroke-linecap: round;
-            filter: drop-shadow(0 8px 8px rgba(0,0,0,0.36));
-            opacity: 0;
-            transform-origin: 50% 0;
-            will-change: transform, opacity;
-        }
-
-        .intro-card {
-            position: absolute;
-            left: 50%;
-            top: 188px;
-            z-index: 4;
-            width: min(64vw, 230px);
-            aspect-ratio: 0.72;
-            border: 0;
-            background: transparent;
-            cursor: default;
-            transform: translate(-50%, -72vh) rotate(-18deg);
-            transform-origin: 50% -72px;
-            will-change: transform;
-        }
-
-        .intro-screen.is-ready .intro-card {
-            cursor: pointer;
-            animation: introCardIdle 4s ease-in-out infinite;
-        }
-
-        .intro-card:focus-visible {
-            outline: 3px solid #245bff;
-            outline-offset: 12px;
-            border-radius: 24px;
-        }
-
-        .intro-hint {
-            position: absolute;
-            left: 50%;
-            bottom: 34px;
-            z-index: 4;
-            color: #374151;
-            color: rgba(255,255,255,0.72);
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 0.08em;
-            opacity: 0;
-            transform: translate(-50%, 10px);
-            transition: opacity 0.45s ease, transform 0.45s ease;
-            pointer-events: none;
-        }
-
-        .intro-screen.is-ready .intro-hint {
-            opacity: 0.82;
-            transform: translate(-50%, 0);
-        }
-
-        .card-mark {
-            width: min(52%, 116px);
-            height: auto;
-            display: block;
-            margin: auto;
-        }
-
-        @keyframes introCardDrop {
-            0% {
-                transform: translate(-50%, -118vh) rotate(-18deg);
-            }
-            58% {
-                transform: translate(-50%, 34px) rotate(8deg);
-            }
-            72% {
-                transform: translate(-50%, -14px) rotate(-5deg);
-            }
-            84% {
-                transform: translate(-50%, 8px) rotate(3deg);
-            }
-            100% {
-                transform: translate(-50%, 0) rotate(-2deg);
-            }
-        }
-
-        @keyframes introRopeDrop {
-            0% {
-                transform: translateY(-88vh) scaleY(0.42);
-                opacity: 0;
-            }
-            54% {
-                transform: translateY(24px) scaleY(1.08);
-                opacity: 1;
-            }
-            72% {
-                transform: translateY(-10px) scaleY(0.96);
-            }
-            100% {
-                transform: translateY(0) scaleY(1);
-                opacity: 1;
-            }
-        }
-
-        @keyframes introCardIdle {
-            0%, 100% {
-                transform: translate(-50%, 0) rotate(-2deg);
-            }
-            50% {
-                transform: translate(-50%, 5px) rotate(2deg);
-            }
         }
 
         .hero-scroll-wrapper {
@@ -421,16 +202,8 @@
             padding: 0 20px;
             position: relative;
             z-index: 10;
-            display: none;
-            opacity: 0;
-            transform: translateY(24px);
-        }
-
-        body.about-open .container {
-            display: block;
             opacity: 1;
             transform: translateY(0);
-            transition: opacity 0.65s ease, transform 0.65s ease;
         }
 
         .content-card {
@@ -588,27 +361,6 @@
             box-shadow: 0 6px 14px rgba(0,0,0,0.12);
             user-select: none;
             -webkit-user-drag: none;
-        }
-
-        .intro-card .card-mark {
-            display: none;
-        }
-
-        .intro-card .lanyard-photo-card {
-            padding: 18px 18px 70px;
-            overflow: hidden;
-        }
-
-        .intro-card .lanyard-photo-card img {
-            position: static;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center 30%;
-            display: block;
-            border-radius: 12px;
-            opacity: 1;
-            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
         }
 
         .about-lanyard-card .card-mark {
@@ -869,12 +621,10 @@
             </div>
 
             <nav class="navbar">
-                <div class="nav-logo">鉂?My Channel</div>
+                <div class="nav-logo">My Channel</div>
                 <ul class="nav-links">
                     <li><a href="#">ME</a></li>
-                    <li><a href="#">Information</a></li>
-                    <li><a href="#">Interests</a></li>
-                    <li><a href="#">Friends</a></li>
+                    <li><a href="#about">About</a></li>
                 </ul>
             </nav>
 
@@ -887,34 +637,7 @@
         </header>
     </div>
 
-    <section class="intro-screen" aria-label="鐐瑰嚮鎸傜怀鍗＄墖杩涘叆涓汉浠嬬粛">
-        <div class="intro-lanyard-stage">
-            <canvas class="ballpit-canvas" aria-hidden="true"></canvas>
-            <div class="intro-anchor" aria-hidden="true"></div>
-            <svg class="intro-rope" viewBox="0 0 430 620" preserveAspectRatio="none" aria-hidden="true">
-                <path d="M215 34 C188 112, 158 154, 168 230 C177 296, 205 330, 215 386 C225 330, 253 296, 262 230 C272 154, 242 112, 215 34" />
-            </svg>
-            <button class="intro-card" type="button" aria-label="杩涘叆涓汉浠嬬粛椤?>
-                <div class="lanyard-clip" aria-hidden="true"></div>
-                <div class="lanyard-photo-card">
-                    <svg class="card-mark" viewBox="0 0 120 120" aria-hidden="true">
-                        <g fill="none" stroke="#050505" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
-                            <ellipse cx="60" cy="60" rx="46" ry="15" transform="rotate(0 60 60)" />
-                            <ellipse cx="60" cy="60" rx="46" ry="15" transform="rotate(60 60 60)" />
-                            <ellipse cx="60" cy="60" rx="46" ry="15" transform="rotate(120 60 60)" />
-                            <circle cx="60" cy="60" r="5" fill="#050505" stroke="none" />
-                        </g>
-                    </svg>
-                    <img src="avatar.jpg" alt="榄忕懚鐨勫崱閫氬ご鍍?>
-                    <div class="lanyard-name">Wei Yao</div>
-                    <div class="lanyard-role">MY CHANNEL</div>
-                </div>
-            </button>
-            <div class="intro-hint">CLICK CARD TO ENTER</div>
-        </div>
-    </section>
-
-    <div class="container">
+    <div class="container" id="about">
         <div class="content-card">
 
             <h2 class="section-title">About Me</h2>
@@ -923,15 +646,15 @@
             <div class="profile-grid">
 
                 <div class="about-photo-frame">
-                    <img src="avatar-full.png" alt="榄忕懚鐨勫崱閫氬叏韬ご鍍?>
+                    <img src="avatar-full.png" alt="Wei Yao cartoon portrait">
                 </div>
 
                 <div class="info-box">
-                    <h3>榄忕懚 (Siri)</h3>
-                    <p class="info-tagline">(鍔姏瀛︿範鐗?娲昏穬鐗?蹇箰鐗?</p>
+                    <h3>Wei Yao</h3>
+                    <p class="info-tagline">(努力学习版 活跃版 快乐版)</p>
 
-                    <p class="info-text">Hello锛屾垜鏄竴涓櫘閫氱殑宸ヤ笟璁捐宸ョ▼瀛︾敓銆傛杩庢潵鍒版垜鐨勪釜浜洪閬擄紒</p>
-                    <p class="info-text">鎴戝枩娆㈠ぉ椹绌虹殑骞绘兂锛岃嚧鍔涗簬鐢ㄧ幇浠ｈ璁℃墜娉曟妸鏈夎叮鐨勬兂娉曞甫杩涢楗般€傛湰韬苟涓嶆槸涓粷瀵圭殑 cute girl锛屾垜鏇村姫鍔涙兂鎴愪负涓€涓?cool girl銆傛椂甯稿畨闈欐椂甯稿彂鐤槸鎴戠殑鏃ュ父锛屽弽姝ｅ紑蹇冨氨濂戒簡锛?/p>
+                    <p class="info-text">Hello，我是一个普通的工业设计工程学生。欢迎来到我的个人频道！</p>
+                    <p class="info-text">我喜欢天马行空的幻想，致力于用现代设计手法把有趣的想法带进首饰。本身并不是一个绝对的 cute girl，我更努力想成为一个 cool girl。时常安静，时常发疯，是我的日常，反正开心就好了！</p>
 
                 </div>
 
@@ -940,223 +663,11 @@
         </div>
 
         <div class="footer">
-            <p>&copy; 2026 鎴戠殑涓汉缃戦〉 | Powered by GitHub Pages</p>
+            <p>&copy; 2026 Wei Yao | Powered by GitHub Pages</p>
         </div>
     </div>
     </main>
     <script>
-        function initIntroBallpit() {
-            const canvas = document.querySelector(".ballpit-canvas");
-            const stage = document.querySelector(".intro-lanyard-stage");
-
-            if (!canvas || !stage) {
-                return null;
-            }
-
-            const ctx = canvas.getContext("2d");
-            const balls = [];
-            const palette = ["#ffffff", "#f6f1ff", "#d9ccff", "#b7f3ff", "#ffe2f0", "#fff3b8"];
-            let width = 0;
-            let height = 0;
-            let dpr = 1;
-            let lastImpactProgress = 0;
-            let burstDone = false;
-
-            const rand = (min, max) => Math.random() * (max - min) + min;
-
-            const resize = () => {
-                const rect = stage.getBoundingClientRect();
-                dpr = Math.min(window.devicePixelRatio || 1, 2);
-                width = Math.max(1, rect.width);
-                height = Math.max(1, rect.height);
-                canvas.width = Math.round(width * dpr);
-                canvas.height = Math.round(height * dpr);
-                canvas.style.width = `${width}px`;
-                canvas.style.height = `${height}px`;
-                ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-
-                if (!balls.length) {
-                    const count = window.innerWidth < 768 ? 46 : 76;
-                    for (let i = 0; i < count; i++) {
-                        balls.push({
-                            x: rand(28, width - 28),
-                            y: rand(height * 0.46, height - 28),
-                            vx: rand(-0.55, 0.55),
-                            vy: rand(-0.35, 0.35),
-                            r: rand(8, 18),
-                            color: palette[i % palette.length],
-                            shine: rand(0.15, 0.42)
-                        });
-                    }
-                }
-            };
-
-            const impact = (cardRect, progress) => {
-                const stageRect = stage.getBoundingClientRect();
-                const cardCenterX = cardRect.left - stageRect.left + cardRect.width / 2;
-                const cardBottomY = cardRect.bottom - stageRect.top;
-                const delta = Math.max(0, progress - lastImpactProgress);
-                lastImpactProgress = progress;
-
-                const strength = delta * 95 + (progress > 0.2 && progress < 0.94 ? 1.6 : 0);
-
-                for (const ball of balls) {
-                    const dx = ball.x - cardCenterX;
-                    const dy = ball.y - cardBottomY;
-                    const distance = Math.hypot(dx, dy);
-                    const reach = cardRect.width * 0.68 + ball.r;
-
-                    if (distance < reach) {
-                        const force = (1 - distance / reach) * strength;
-                        const angle = Math.atan2(dy || -1, dx || 1);
-                        ball.vx += Math.cos(angle) * force + rand(-0.7, 0.7);
-                        ball.vy += Math.sin(angle) * force - force * 0.9 - rand(0.4, 1.2);
-                    }
-                }
-
-                if (progress > 0.86 && !burstDone) {
-                    burstDone = true;
-                    for (const ball of balls) {
-                        const dx = ball.x - cardCenterX;
-                        const dy = ball.y - cardBottomY;
-                        const distance = Math.max(24, Math.hypot(dx, dy));
-                        const force = Math.max(0, 7.5 - distance * 0.012);
-                        ball.vx += (dx / distance) * force + rand(-2, 2);
-                        ball.vy += (dy / distance) * force - rand(2, 5);
-                    }
-                }
-
-                if (progress < 0.2) {
-                    burstDone = false;
-                }
-            };
-
-            const step = () => {
-                ctx.clearRect(0, 0, width, height);
-
-                for (const ball of balls) {
-                    ball.vy += 0.12;
-                    ball.vx *= 0.992;
-                    ball.vy *= 0.992;
-                    ball.x += ball.vx;
-                    ball.y += ball.vy;
-
-                    if (ball.x - ball.r < 0) {
-                        ball.x = ball.r;
-                        ball.vx *= -0.82;
-                    }
-                    if (ball.x + ball.r > width) {
-                        ball.x = width - ball.r;
-                        ball.vx *= -0.82;
-                    }
-                    if (ball.y - ball.r < 0) {
-                        ball.y = ball.r;
-                        ball.vy *= -0.75;
-                    }
-                    if (ball.y + ball.r > height) {
-                        ball.y = height - ball.r;
-                        ball.vy *= -0.72;
-                        ball.vx *= 0.88;
-                    }
-
-                    const gradient = ctx.createRadialGradient(
-                        ball.x - ball.r * 0.35,
-                        ball.y - ball.r * 0.45,
-                        ball.r * 0.2,
-                        ball.x,
-                        ball.y,
-                        ball.r
-                    );
-                    gradient.addColorStop(0, "#ffffff");
-                    gradient.addColorStop(ball.shine, ball.color);
-                    gradient.addColorStop(1, "rgba(120, 105, 165, 0.72)");
-
-                    ctx.beginPath();
-                    ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
-                    ctx.fillStyle = gradient;
-                    ctx.fill();
-                }
-
-                requestAnimationFrame(step);
-            };
-
-            resize();
-            window.addEventListener("resize", resize);
-            step();
-
-            return { impact };
-        }
-
-        window.addEventListener("load", () => {
-            const introScreen = document.querySelector(".intro-screen");
-            const introCard = document.querySelector(".intro-card");
-            const introRope = document.querySelector(".intro-rope path");
-            const aboutSection = document.querySelector(".container");
-            const introBallpit = initIntroBallpit();
-
-            if (!introScreen || !introCard || !introRope) {
-                return;
-            }
-
-            let canEnter = false;
-
-            const clampValue = (value, min, max) => Math.min(Math.max(value, min), max);
-            const easeOut = (value) => 1 - Math.pow(1 - value, 3);
-
-            const updateIntroDrop = () => {
-                const rect = introScreen.getBoundingClientRect();
-                const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-                const rawProgress = (viewportHeight - rect.top) / (viewportHeight * 1.65);
-                const progress = clampValue(rawProgress, 0, 1);
-                const eased = easeOut(progress);
-
-                const overshoot = progress > 0.58 && progress < 0.88
-                    ? Math.sin((progress - 0.58) / 0.3 * Math.PI) * 34
-                    : 0;
-                const settle = progress > 0.78
-                    ? Math.sin((progress - 0.78) / 0.22 * Math.PI) * -12
-                    : 0;
-
-                const y = -72 + eased * 72 + (overshoot + settle) / viewportHeight * 100;
-                const rotate = -18 + eased * 16 + Math.sin(progress * Math.PI * 2.6) * (1 - progress) * 8;
-                const ropeY = -88 + eased * 88 + overshoot / viewportHeight * 100;
-                const ropeScale = 0.42 + eased * 0.58 + Math.max(0, Math.sin(progress * Math.PI)) * 0.08;
-
-                introCard.style.transform = `translate(-50%, ${y}vh) rotate(${rotate}deg)`;
-                introRope.style.transform = `translateY(${ropeY}vh) scaleY(${ropeScale})`;
-                introRope.style.opacity = `${clampValue(progress * 1.45, 0, 1)}`;
-                introBallpit?.impact(introCard.getBoundingClientRect(), progress);
-
-                if (progress >= 0.98) {
-                    canEnter = true;
-                    introScreen.classList.add("is-ready");
-                } else {
-                    canEnter = false;
-                    introScreen.classList.remove("is-ready");
-                }
-            };
-
-            updateIntroDrop();
-            window.addEventListener("scroll", updateIntroDrop, { passive: true });
-            window.addEventListener("resize", updateIntroDrop);
-
-            const enterAbout = () => {
-                if (!canEnter && !introScreen.classList.contains("is-ready")) {
-                    return;
-                }
-
-                document.body.classList.add("about-open");
-                aboutSection?.scrollIntoView({ behavior: "smooth", block: "start" });
-            };
-
-            introCard.addEventListener("click", enterAbout);
-            introScreen.addEventListener("click", (event) => {
-                if (event.target.closest(".intro-card")) {
-                    enterAbout();
-                }
-            });
-        });
-
         window.addEventListener("load", () => {
             const wrapper = document.querySelector(".hero-scroll-wrapper");
             const windowImages = document.querySelectorAll(".portal-window img");
@@ -1232,116 +743,6 @@
             window.addEventListener("resize", updatePortal);
         });
 
-        window.addEventListener("load", () => {
-            const stage = document.querySelector(".lanyard-stage");
-            const card = document.querySelector(".lanyard-card");
-            const rope = document.querySelector(".lanyard-rope-line");
-            const aboutCard = document.querySelector(".about-lanyard-card");
-
-            aboutCard?.addEventListener("pointerenter", () => {
-                aboutCard.classList.add("is-waving");
-            });
-
-            aboutCard?.addEventListener("pointerleave", () => {
-                aboutCard.classList.remove("is-waving");
-            });
-
-            if (!stage || !card || !rope) {
-                return;
-            }
-
-            const state = {
-                x: 0,
-                y: 0,
-                vx: 0,
-                vy: 0,
-                targetX: 0,
-                targetY: 0,
-                dragging: false,
-                pointerStartX: 0,
-                pointerStartY: 0,
-                startX: 0,
-                startY: 0
-            };
-
-            const clampValue = (value, min, max) => Math.min(Math.max(value, min), max);
-
-            const updateRope = () => {
-                const swayX = state.x * 0.38;
-                const pullY = Math.max(state.y, -20) * 0.22;
-                const leftControl = 130 + swayX * 0.45;
-                const rightControl = 190 + swayX * 0.45;
-                const centerX = 160 + swayX;
-                const lowerY = 244 + pullY;
-
-                rope.setAttribute(
-                    "d",
-                    `M160 34 C${145 + swayX * 0.2} 82, ${leftControl} 112, ${130 + swayX * 0.7} 150 C${134 + swayX * 0.7} 188, ${156 + swayX} 212, ${centerX} ${lowerY} C${164 + swayX} 212, ${186 + swayX * 0.7} 188, ${rightControl} 150 C${194 + swayX * 0.35} 112, ${175 + swayX * 0.2} 82, 160 34`
-                );
-            };
-
-            const renderLanyard = () => {
-                state.x += (state.targetX - state.x) * 0.16;
-                state.y += (state.targetY - state.y) * 0.16;
-
-                if (!state.dragging) {
-                    state.vx += (0 - state.targetX) * 0.08;
-                    state.vy += (0 - state.targetY) * 0.08;
-                    state.vx *= 0.78;
-                    state.vy *= 0.78;
-                    state.targetX += state.vx;
-                    state.targetY += state.vy;
-                }
-
-                const rotation = clampValue(state.x * 0.08 + state.vx * 0.22, -14, 14);
-                card.style.setProperty("--card-x", `${state.x}px`);
-                card.style.setProperty("--card-y", `${state.y}px`);
-                card.style.setProperty("--card-rotate", `${rotation}deg`);
-                updateRope();
-
-                requestAnimationFrame(renderLanyard);
-            };
-
-            card.addEventListener("pointerdown", (event) => {
-                state.dragging = true;
-                state.pointerStartX = event.clientX;
-                state.pointerStartY = event.clientY;
-                state.startX = state.targetX;
-                state.startY = state.targetY;
-                state.vx = 0;
-                state.vy = 0;
-                card.classList.add("is-dragging");
-                card.setPointerCapture(event.pointerId);
-            });
-
-            card.addEventListener("pointermove", (event) => {
-                if (!state.dragging) {
-                    return;
-                }
-
-                state.targetX = clampValue(state.startX + event.clientX - state.pointerStartX, -95, 95);
-                state.targetY = clampValue(state.startY + event.clientY - state.pointerStartY, -52, 118);
-            });
-
-            const releaseCard = (event) => {
-                if (!state.dragging) {
-                    return;
-                }
-
-                state.dragging = false;
-                state.vx = (state.targetX - state.x) * 0.18;
-                state.vy = (state.targetY - state.y) * 0.18;
-                card.classList.remove("is-dragging");
-
-                if (event?.pointerId) {
-                    card.releasePointerCapture(event.pointerId);
-                }
-            };
-
-            card.addEventListener("pointerup", releaseCard);
-            card.addEventListener("pointercancel", releaseCard);
-            renderLanyard();
-        });
     </script>
 </body>
 </html>
