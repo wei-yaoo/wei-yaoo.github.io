@@ -21,6 +21,180 @@
             line-height: 1.6;
         }
 
+        body.intro-active {
+            overflow: auto;
+        }
+
+        .intro-screen {
+            position: relative;
+            z-index: 4;
+            display: grid;
+            place-items: center;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at 50% 10%, rgba(255,255,255,0.94), rgba(255,255,255,0) 28%),
+                linear-gradient(145deg, #fff7e6 0%, #eff6ff 48%, #fff0f5 100%);
+            transition: opacity 0.7s ease, visibility 0.7s ease, transform 0.7s ease;
+        }
+
+        body.entered-site .intro-screen {
+            opacity: 1;
+            visibility: visible;
+            transform: none;
+            pointer-events: auto;
+        }
+
+        .site-shell {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+            transition: opacity 0.8s ease, visibility 0.8s ease, transform 0.8s ease;
+        }
+
+        body.entered-site .site-shell {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .intro-lanyard-stage {
+            position: relative;
+            width: min(86vw, 430px);
+            height: min(82vh, 620px);
+            display: grid;
+            place-items: center;
+            overflow: visible;
+        }
+
+        .intro-anchor {
+            position: absolute;
+            left: 50%;
+            top: 22px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #242b42, #858da6);
+            box-shadow: 0 8px 18px rgba(31,41,55,0.22), inset 0 2px 4px rgba(255,255,255,0.5);
+            transform: translateX(-50%);
+            z-index: 3;
+        }
+
+        .intro-rope {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .intro-rope path {
+            fill: none;
+            stroke: url(#introLanyardGradient);
+            stroke-width: 10;
+            stroke-linecap: round;
+            filter: drop-shadow(0 10px 10px rgba(32,38,67,0.15));
+            opacity: 0;
+            transform-origin: 50% 0;
+            will-change: transform, opacity;
+        }
+
+        .intro-card {
+            position: absolute;
+            left: 50%;
+            top: 104px;
+            z-index: 2;
+            width: min(72vw, 285px);
+            aspect-ratio: 0.68;
+            border: 0;
+            background: transparent;
+            cursor: default;
+            transform: translate(-50%, -118vh) rotate(-18deg);
+            transform-origin: 50% -72px;
+            will-change: transform;
+        }
+
+        .intro-screen.is-ready .intro-card {
+            cursor: pointer;
+            animation: introCardIdle 4s ease-in-out infinite;
+        }
+
+        .intro-card:focus-visible {
+            outline: 3px solid #245bff;
+            outline-offset: 12px;
+            border-radius: 24px;
+        }
+
+        .intro-card .lanyard-photo-card {
+            text-align: center;
+        }
+
+        .intro-hint {
+            position: absolute;
+            left: 50%;
+            bottom: 34px;
+            z-index: 4;
+            color: #374151;
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            opacity: 0;
+            transform: translate(-50%, 10px);
+            transition: opacity 0.45s ease, transform 0.45s ease;
+            pointer-events: none;
+        }
+
+        .intro-screen.is-ready .intro-hint {
+            opacity: 0.82;
+            transform: translate(-50%, 0);
+        }
+
+        @keyframes introCardDrop {
+            0% {
+                transform: translate(-50%, -118vh) rotate(-18deg);
+            }
+            58% {
+                transform: translate(-50%, 34px) rotate(8deg);
+            }
+            72% {
+                transform: translate(-50%, -14px) rotate(-5deg);
+            }
+            84% {
+                transform: translate(-50%, 8px) rotate(3deg);
+            }
+            100% {
+                transform: translate(-50%, 0) rotate(-2deg);
+            }
+        }
+
+        @keyframes introRopeDrop {
+            0% {
+                transform: translateY(-88vh) scaleY(0.42);
+                opacity: 0;
+            }
+            54% {
+                transform: translateY(24px) scaleY(1.08);
+                opacity: 1;
+            }
+            72% {
+                transform: translateY(-10px) scaleY(0.96);
+            }
+            100% {
+                transform: translateY(0) scaleY(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes introCardIdle {
+            0%, 100% {
+                transform: translate(-50%, 0) rotate(-2deg);
+            }
+            50% {
+                transform: translate(-50%, 5px) rotate(2deg);
+            }
+        }
+
         .hero-scroll-wrapper {
             position: relative;
             width: 100%;
@@ -479,6 +653,7 @@
 </head>
 
 <body>
+    <main class="site-shell" id="site">
 
     <div class="hero-scroll-wrapper">
         <header class="hero-section">
@@ -506,6 +681,31 @@
             <div class="hero-scroll-cue" aria-hidden="true"></div>
         </header>
     </div>
+
+    <section class="intro-screen" aria-label="点击挂绳卡片进入个人介绍">
+        <div class="intro-lanyard-stage">
+            <div class="intro-anchor" aria-hidden="true"></div>
+            <svg class="intro-rope" viewBox="0 0 430 620" preserveAspectRatio="none" aria-hidden="true">
+                <defs>
+                    <linearGradient id="introLanyardGradient" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stop-color="#245bff" />
+                        <stop offset="45%" stop-color="#ff4b9b" />
+                        <stop offset="100%" stop-color="#ff9f1a" />
+                    </linearGradient>
+                </defs>
+                <path d="M215 34 C188 112, 158 154, 168 230 C177 296, 205 330, 215 386 C225 330, 253 296, 262 230 C272 154, 242 112, 215 34" />
+            </svg>
+            <button class="intro-card" type="button" aria-label="进入个人介绍页">
+                <div class="lanyard-clip" aria-hidden="true"></div>
+                <div class="lanyard-photo-card">
+                    <img src="avatar.jpg" alt="魏瑶的卡通头像">
+                    <div class="lanyard-name">Siri</div>
+                    <div class="lanyard-role">MY CHANNEL</div>
+                </div>
+            </button>
+            <div class="intro-hint">CLICK CARD TO ENTER</div>
+        </div>
+    </section>
 
     <div class="container">
         <div class="content-card">
@@ -564,7 +764,68 @@
             <p>&copy; 2026 我的个人网页 | Powered by GitHub Pages</p>
         </div>
     </div>
+    </main>
     <script>
+        window.addEventListener("load", () => {
+            const introScreen = document.querySelector(".intro-screen");
+            const introCard = document.querySelector(".intro-card");
+            const introRope = document.querySelector(".intro-rope path");
+            const aboutSection = document.querySelector(".container");
+
+            if (!introScreen || !introCard || !introRope) {
+                return;
+            }
+
+            let canEnter = false;
+
+            const clampValue = (value, min, max) => Math.min(Math.max(value, min), max);
+            const easeOut = (value) => 1 - Math.pow(1 - value, 3);
+
+            const updateIntroDrop = () => {
+                const rect = introScreen.getBoundingClientRect();
+                const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+                const rawProgress = (viewportHeight - rect.top) / (viewportHeight * 1.65);
+                const progress = clampValue(rawProgress, 0, 1);
+                const eased = easeOut(progress);
+
+                const overshoot = progress > 0.58 && progress < 0.88
+                    ? Math.sin((progress - 0.58) / 0.3 * Math.PI) * 34
+                    : 0;
+                const settle = progress > 0.78
+                    ? Math.sin((progress - 0.78) / 0.22 * Math.PI) * -12
+                    : 0;
+
+                const y = -118 + eased * 118 + (overshoot + settle) / viewportHeight * 100;
+                const rotate = -18 + eased * 16 + Math.sin(progress * Math.PI * 2.6) * (1 - progress) * 8;
+                const ropeY = -88 + eased * 88 + overshoot / viewportHeight * 100;
+                const ropeScale = 0.42 + eased * 0.58 + Math.max(0, Math.sin(progress * Math.PI)) * 0.08;
+
+                introCard.style.transform = `translate(-50%, ${y}vh) rotate(${rotate}deg)`;
+                introRope.style.transform = `translateY(${ropeY}vh) scaleY(${ropeScale})`;
+                introRope.style.opacity = `${clampValue(progress * 1.45, 0, 1)}`;
+
+                if (progress >= 0.98) {
+                    canEnter = true;
+                    introScreen.classList.add("is-ready");
+                } else {
+                    canEnter = false;
+                    introScreen.classList.remove("is-ready");
+                }
+            };
+
+            updateIntroDrop();
+            window.addEventListener("scroll", updateIntroDrop, { passive: true });
+            window.addEventListener("resize", updateIntroDrop);
+
+            introCard.addEventListener("click", () => {
+                if (!canEnter) {
+                    return;
+                }
+
+                aboutSection?.scrollIntoView({ behavior: "smooth", block: "start" });
+            });
+        });
+
         window.addEventListener("load", () => {
             const wrapper = document.querySelector(".hero-scroll-wrapper");
             const windowImages = document.querySelectorAll(".portal-window img");
