@@ -583,6 +583,64 @@
             display: none;
         }
 
+        .about-lanyard-card .card-mark {
+            display: none;
+        }
+
+        .about-lanyard-card .lanyard-photo-card {
+            padding: 18px 18px 70px;
+            overflow: hidden;
+        }
+
+        .about-lanyard-card .lanyard-photo-card img {
+            position: static;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            object-fit: cover;
+            object-position: center 42%;
+            border-radius: 12px;
+            opacity: 1;
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06);
+            transition: transform 0.35s ease;
+        }
+
+        .about-lanyard-card .lanyard-photo-card::after {
+            content: "";
+            position: absolute;
+            right: 24px;
+            top: 42%;
+            width: 38px;
+            height: 54px;
+            border-radius: 999px 999px 18px 18px;
+            background: linear-gradient(180deg, #ffd5c6, #f4a995);
+            box-shadow: inset -4px -5px 0 rgba(210,82,82,0.12), 0 4px 10px rgba(0,0,0,0.1);
+            opacity: 0;
+            transform: rotate(24deg) translateY(12px);
+            transform-origin: 50% 100%;
+            pointer-events: none;
+        }
+
+        .about-lanyard-card:hover .lanyard-photo-card img,
+        .about-lanyard-card.is-waving .lanyard-photo-card img {
+            transform: translateY(-4px) scale(1.03);
+        }
+
+        .about-lanyard-card:hover .lanyard-photo-card::after,
+        .about-lanyard-card.is-waving .lanyard-photo-card::after {
+            opacity: 1;
+            animation: waveHand 0.72s ease-in-out infinite;
+        }
+
+        @keyframes waveHand {
+            0%, 100% {
+                transform: rotate(18deg) translateY(8px);
+            }
+            50% {
+                transform: rotate(42deg) translateY(0);
+            }
+        }
+
         .lanyard-name {
             position: absolute;
             left: 18px;
@@ -801,7 +859,7 @@
                     <svg class="lanyard-rope" viewBox="0 0 320 440" preserveAspectRatio="none" aria-hidden="true">
                         <path class="lanyard-rope-line" d="M160 34 C145 82, 126 112, 130 150 C134 188, 156 212, 160 244 C164 212, 186 188, 190 150 C194 112, 175 82, 160 34" />
                     </svg>
-                    <div class="lanyard-card" role="img" aria-label="魏瑶的头像挂绳卡片">
+                    <div class="lanyard-card about-lanyard-card" role="img" aria-label="魏瑶的头像挂绳卡片">
                         <div class="lanyard-clip" aria-hidden="true"></div>
                         <div class="lanyard-photo-card">
                             <svg class="card-mark" viewBox="0 0 120 120" aria-hidden="true">
@@ -812,7 +870,7 @@
                                     <circle cx="60" cy="60" r="5" fill="#050505" stroke="none" />
                                 </g>
                             </svg>
-                            <img src="avatar.jpg" alt="魏瑶的卡通头像">
+                            <img src="avatar-full.png" alt="魏瑶的卡通全身头像">
                             <div class="lanyard-name">Siri</div>
                             <div class="lanyard-role">MY CHANNEL</div>
                         </div>
@@ -988,10 +1046,19 @@
             const stage = document.querySelector(".lanyard-stage");
             const card = document.querySelector(".lanyard-card");
             const rope = document.querySelector(".lanyard-rope-line");
+            const aboutCard = document.querySelector(".about-lanyard-card");
 
             if (!stage || !card || !rope) {
                 return;
             }
+
+            aboutCard?.addEventListener("pointerenter", () => {
+                aboutCard.classList.add("is-waving");
+            });
+
+            aboutCard?.addEventListener("pointerleave", () => {
+                aboutCard.classList.remove("is-waving");
+            });
 
             const state = {
                 x: 0,
