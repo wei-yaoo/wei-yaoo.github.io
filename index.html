@@ -224,40 +224,131 @@
             align-items: start;
         }
 
-        .avatar-box {
+        .lanyard-stage {
+            --card-x: 0px;
+            --card-y: 0px;
+            --card-rotate: -2deg;
             position: relative;
-            border-radius: 14px;
+            min-height: 440px;
+            border-radius: 18px;
             overflow: hidden;
-            box-shadow: 0 8px 25px rgba(79, 70, 229, 0.1), 0 4px 12px rgba(0,0,0,0.05);
-            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-            animation: avatarBreath 6s ease-in-out infinite alternate;
+            background:
+                radial-gradient(circle at 50% 18%, rgba(255,255,255,0.92), rgba(255,255,255,0) 28%),
+                linear-gradient(145deg, #fff7e6 0%, #f1f6ff 48%, #fff0f5 100%);
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.78), 0 18px 40px rgba(79,70,229,0.12);
+            touch-action: none;
         }
 
-        .avatar-box img {
+        .lanyard-anchor {
+            position: absolute;
+            left: 50%;
+            top: 24px;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #2c3148, #777d96);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.18), inset 0 2px 4px rgba(255,255,255,0.45);
+            transform: translateX(-50%);
+            z-index: 3;
+        }
+
+        .lanyard-rope {
+            position: absolute;
+            inset: 0;
             width: 100%;
-            height: auto;
-            border-radius: 14px;
+            height: 100%;
+            overflow: visible;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .lanyard-rope path {
+            fill: none;
+            stroke: url(#lanyardGradient);
+            stroke-width: 9;
+            stroke-linecap: round;
+            filter: drop-shadow(0 8px 8px rgba(32, 38, 67, 0.16));
+        }
+
+        .lanyard-card {
+            position: absolute;
+            left: 50%;
+            top: 128px;
+            z-index: 2;
+            width: min(78%, 270px);
+            aspect-ratio: 0.68;
+            cursor: grab;
+            transform: translate(calc(-50% + var(--card-x)), var(--card-y)) rotate(var(--card-rotate));
+            transform-origin: 50% -58px;
+            transition: box-shadow 0.2s ease;
+            will-change: transform;
+        }
+
+        .lanyard-card.is-dragging {
+            cursor: grabbing;
+            transition: none;
+        }
+
+        .lanyard-clip {
+            position: absolute;
+            left: 50%;
+            top: -32px;
+            width: 76px;
+            height: 48px;
+            border-radius: 18px 18px 12px 12px;
+            background: linear-gradient(145deg, #f8fafc, #9aa3b5);
+            box-shadow: inset 0 2px 5px rgba(255,255,255,0.72), 0 8px 16px rgba(32,38,67,0.18);
+            transform: translateX(-50%);
+        }
+
+        .lanyard-clip::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            bottom: 8px;
+            width: 38px;
+            height: 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.82);
+            transform: translateX(-50%);
+        }
+
+        .lanyard-photo-card {
+            height: 100%;
+            padding: 16px 16px 22px;
+            border-radius: 22px;
+            background: linear-gradient(180deg, #ffffff, #f8fbff);
+            box-shadow: 0 26px 48px rgba(32,38,67,0.22), inset 0 0 0 1px rgba(255,255,255,0.9);
+        }
+
+        .lanyard-photo-card img {
+            width: 100%;
+            height: 78%;
+            object-fit: cover;
+            object-position: center top;
             display: block;
-            transition: transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border-radius: 16px;
+            box-shadow: inset 0 0 0 1px rgba(17,24,39,0.08);
+            user-select: none;
+            -webkit-user-drag: none;
         }
 
-        .avatar-box:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 35px rgba(79, 70, 229, 0.18), 0 10px 20px rgba(0,0,0,0.08);
+        .lanyard-name {
+            margin-top: 14px;
+            color: #111827;
+            font-size: 20px;
+            font-weight: 800;
+            text-align: center;
+            line-height: 1.1;
         }
 
-        .avatar-box:hover img {
-            transform: scale(1.05);
-        }
-
-        @keyframes avatarBreath {
-            0% {
-                transform: scale(1);
-            }
-            100% {
-                transform: scale(1.015) translateY(-2px);
-                box-shadow: 0 12px 28px rgba(79, 70, 229, 0.13), 0 6px 14px rgba(0,0,0,0.06);
-            }
+        .lanyard-role {
+            margin-top: 6px;
+            color: #ff4757;
+            font-size: 12px;
+            font-weight: 700;
+            text-align: center;
+            letter-spacing: 0.08em;
         }
 
         .info-box h3 {
@@ -375,12 +466,13 @@
                 margin-top: -10px;
             }
 
-            .avatar-box:hover {
-                transform: none;
+            .lanyard-stage {
+                min-height: 380px;
             }
 
-            .avatar-box:hover img {
-                transform: none;
+            .lanyard-card {
+                width: min(82%, 235px);
+                top: 118px;
             }
         }
     </style>
@@ -423,8 +515,26 @@
 
             <div class="profile-grid">
 
-                <div class="avatar-box">
-                    <img src="avatar.jpg" alt="魏瑶的卡通头像">
+                <div class="lanyard-stage" aria-label="可拖拽头像挂绳卡片">
+                    <div class="lanyard-anchor" aria-hidden="true"></div>
+                    <svg class="lanyard-rope" viewBox="0 0 320 440" preserveAspectRatio="none" aria-hidden="true">
+                        <defs>
+                            <linearGradient id="lanyardGradient" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="#245bff" />
+                                <stop offset="42%" stop-color="#ff4b9b" />
+                                <stop offset="100%" stop-color="#ff9f1a" />
+                            </linearGradient>
+                        </defs>
+                        <path class="lanyard-rope-line" d="M160 34 C145 82, 126 112, 130 150 C134 188, 156 212, 160 244 C164 212, 186 188, 190 150 C194 112, 175 82, 160 34" />
+                    </svg>
+                    <div class="lanyard-card" role="img" aria-label="魏瑶的头像挂绳卡片">
+                        <div class="lanyard-clip" aria-hidden="true"></div>
+                        <div class="lanyard-photo-card">
+                            <img src="avatar.jpg" alt="魏瑶的卡通头像">
+                            <div class="lanyard-name">Siri</div>
+                            <div class="lanyard-role">MY CHANNEL</div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="info-box">
@@ -528,6 +638,108 @@
             updatePortal();
             window.addEventListener("scroll", updatePortal, { passive: true });
             window.addEventListener("resize", updatePortal);
+        });
+
+        window.addEventListener("load", () => {
+            const stage = document.querySelector(".lanyard-stage");
+            const card = document.querySelector(".lanyard-card");
+            const rope = document.querySelector(".lanyard-rope-line");
+
+            if (!stage || !card || !rope) {
+                return;
+            }
+
+            const state = {
+                x: 0,
+                y: 0,
+                vx: 0,
+                vy: 0,
+                targetX: 0,
+                targetY: 0,
+                dragging: false,
+                pointerStartX: 0,
+                pointerStartY: 0,
+                startX: 0,
+                startY: 0
+            };
+
+            const clampValue = (value, min, max) => Math.min(Math.max(value, min), max);
+
+            const updateRope = () => {
+                const swayX = state.x * 0.38;
+                const pullY = Math.max(state.y, -20) * 0.22;
+                const leftControl = 130 + swayX * 0.45;
+                const rightControl = 190 + swayX * 0.45;
+                const centerX = 160 + swayX;
+                const lowerY = 244 + pullY;
+
+                rope.setAttribute(
+                    "d",
+                    `M160 34 C${145 + swayX * 0.2} 82, ${leftControl} 112, ${130 + swayX * 0.7} 150 C${134 + swayX * 0.7} 188, ${156 + swayX} 212, ${centerX} ${lowerY} C${164 + swayX} 212, ${186 + swayX * 0.7} 188, ${rightControl} 150 C${194 + swayX * 0.35} 112, ${175 + swayX * 0.2} 82, 160 34`
+                );
+            };
+
+            const renderLanyard = () => {
+                state.x += (state.targetX - state.x) * 0.16;
+                state.y += (state.targetY - state.y) * 0.16;
+
+                if (!state.dragging) {
+                    state.vx += (0 - state.targetX) * 0.08;
+                    state.vy += (0 - state.targetY) * 0.08;
+                    state.vx *= 0.78;
+                    state.vy *= 0.78;
+                    state.targetX += state.vx;
+                    state.targetY += state.vy;
+                }
+
+                const rotation = clampValue(state.x * 0.08 + state.vx * 0.22, -14, 14);
+                card.style.setProperty("--card-x", `${state.x}px`);
+                card.style.setProperty("--card-y", `${state.y}px`);
+                card.style.setProperty("--card-rotate", `${rotation}deg`);
+                updateRope();
+
+                requestAnimationFrame(renderLanyard);
+            };
+
+            card.addEventListener("pointerdown", (event) => {
+                state.dragging = true;
+                state.pointerStartX = event.clientX;
+                state.pointerStartY = event.clientY;
+                state.startX = state.targetX;
+                state.startY = state.targetY;
+                state.vx = 0;
+                state.vy = 0;
+                card.classList.add("is-dragging");
+                card.setPointerCapture(event.pointerId);
+            });
+
+            card.addEventListener("pointermove", (event) => {
+                if (!state.dragging) {
+                    return;
+                }
+
+                state.targetX = clampValue(state.startX + event.clientX - state.pointerStartX, -95, 95);
+                state.targetY = clampValue(state.startY + event.clientY - state.pointerStartY, -52, 118);
+            });
+
+            const releaseCard = (event) => {
+                if (!state.dragging) {
+                    return;
+                }
+
+                state.dragging = false;
+                state.vx = (state.targetX - state.x) * 0.18;
+                state.vy = (state.targetY - state.y) * 0.18;
+                card.classList.remove("is-dragging");
+
+                if (event?.pointerId) {
+                    card.releasePointerCapture(event.pointerId);
+                }
+            };
+
+            card.addEventListener("pointerup", releaseCard);
+            card.addEventListener("pointercancel", releaseCard);
+            renderLanyard();
         });
     </script>
 </body>
