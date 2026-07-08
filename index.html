@@ -381,9 +381,16 @@
             object-fit: cover;
             object-position: center center;
             display: block;
-            transition: transform 0.35s ease;
+            transition: opacity 0.35s ease, transform 0.35s ease;
             user-select: none;
             -webkit-user-drag: none;
+        }
+
+        .about-photo-frame .about-photo-wave {
+            position: absolute;
+            inset: 0;
+            height: 100%;
+            opacity: 0;
         }
 
         .about-photo-frame::after {
@@ -397,7 +404,13 @@
             clip-path: polygon(50% 0, 62% 38%, 100% 50%, 62% 62%, 50% 100%, 38% 62%, 0 50%, 38% 38%);
         }
 
-        .about-photo-frame:hover img {
+        .about-photo-frame:hover .about-photo-default {
+            opacity: 0;
+            transform: scale(1.035);
+        }
+
+        .about-photo-frame:hover .about-photo-wave {
+            opacity: 1;
             transform: scale(1.035);
         }
 
@@ -771,7 +784,8 @@
             <div class="profile-grid">
 
                 <div class="about-photo-frame">
-                    <img src="avatar-full.png" alt="魏瑶的卡通头像">
+                    <img class="about-photo-default" src="avatar-full.png" alt="魏瑶的卡通头像">
+                    <img class="about-photo-wave" src="avatar-wave.png" alt="魏瑶挥手打招呼">
                 </div>
 
                 <div class="info-box">
