@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Channel - 魏瑶的个人网页</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
     <style>
         * {
@@ -19,16 +21,26 @@
             line-height: 1.6;
         }
 
+        .hero-scroll-wrapper {
+            position: relative;
+            width: 100%;
+            height: 250vh;
+            z-index: 1;
+        }
+
         /* 顶部大图区域 */
         .hero-section {
-            position: relative;
-            height: 520px;
-            background: url('background.jpg') no-repeat center center/cover;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            min-height: 620px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             color: white;
             text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+            overflow: hidden;
+            isolation: isolate;
         }
 
         .hero-section::after {
@@ -40,6 +52,46 @@
             height: 140px;
             background: linear-gradient(to bottom, rgba(0,0,0,0), #050505);
             z-index: 1;
+        }
+
+        .portal-bg,
+        .portal-window {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .portal-bg {
+            z-index: -2;
+            background: #050505 url('background.jpg') no-repeat 50% 43%/cover;
+            transform: scale(1.22);
+        }
+
+        .portal-window {
+            z-index: -1;
+            perspective: 500px;
+            overflow: hidden;
+        }
+
+        .portal-window img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center center;
+            display: block;
+        }
+
+        .portal-frame {
+            -webkit-mask-image: radial-gradient(circle at 52% 40%, transparent 0 22%, #000 22.35% 100%);
+            mask-image: radial-gradient(circle at 52% 40%, transparent 0 22%, #000 22.35% 100%);
+        }
+
+        .portal-person {
+            clip-path: polygon(30% 46%, 43% 46%, 48% 58%, 50% 100%, 24% 100%, 24% 65%);
         }
 
         .navbar {
@@ -96,19 +148,44 @@
             letter-spacing: 0.5px;
         }
 
-        /* WELCOME 文字交互效果区域 */
-        .text-effect-section {
-            width: 100%;
-            height: 540px;
-            background: linear-gradient(180deg, #050505 0%, #201713 8%, #fff4df 26%, #fff4df 100%);
-            overflow: hidden;
+        .hero-scroll-cue {
+            position: absolute;
+            left: 50%;
+            bottom: 24px;
+            z-index: 3;
+            width: 26px;
+            height: 42px;
+            border: 2px solid rgba(255,255,255,0.72);
+            border-radius: 16px;
+            transform: translateX(-50%);
+            opacity: 0.85;
         }
 
-        .text-effect-section iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
+        .hero-scroll-cue::after {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 8px;
+            width: 4px;
+            height: 8px;
+            border-radius: 999px;
+            background: white;
+            transform: translateX(-50%);
+            animation: scrollCue 1.45s ease-in-out infinite;
+        }
+
+        @keyframes scrollCue {
+            0% {
+                transform: translate(-50%, 0);
+                opacity: 0;
+            }
+            35% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, 14px);
+                opacity: 0;
+            }
         }
 
         /* About Me 内容区域 */
@@ -257,7 +334,7 @@
             }
 
             .hero-section {
-                height: 420px;
+                min-height: 560px;
             }
 
             .hero-title {
@@ -280,8 +357,18 @@
                 font-size: 12px;
             }
 
-            .text-effect-section {
-                height: 420px;
+            .portal-bg {
+                background-position: 48% 45%;
+                transform: scale(1.34);
+            }
+
+            .portal-frame {
+                -webkit-mask-image: radial-gradient(circle at 52% 39%, transparent 0 24%, #000 24.4% 100%);
+                mask-image: radial-gradient(circle at 52% 39%, transparent 0 24%, #000 24.4% 100%);
+            }
+
+            .portal-person {
+                clip-path: polygon(19% 48%, 48% 48%, 55% 64%, 58% 100%, 8% 100%, 8% 68%);
             }
 
             .container {
@@ -301,27 +388,32 @@
 
 <body>
 
-    <header class="hero-section">
-        <nav class="navbar">
-            <div class="nav-logo">❤ My Channel</div>
-            <ul class="nav-links">
-                <li><a href="#">ME</a></li>
-                <li><a href="#">Information</a></li>
-                <li><a href="#">Interests</a></li>
-                <li><a href="#">Friends</a></li>
-            </ul>
-        </nav>
+    <div class="hero-scroll-wrapper">
+        <header class="hero-section">
+            <div class="portal-bg" aria-hidden="true"></div>
+            <div class="portal-window" aria-hidden="true">
+                <img class="portal-frame" src="portal-window.png" alt="">
+                <img class="portal-person" src="portal-window.png" alt="">
+            </div>
 
-        <div class="hero-title-box">
-            <h1 class="hero-title">I'm the protagonist.</h1>
-            <p class="hero-subtitle">Hakuna Matata</p>
-        </div>
-    </header>
+            <nav class="navbar">
+                <div class="nav-logo">❤ My Channel</div>
+                <ul class="nav-links">
+                    <li><a href="#">ME</a></li>
+                    <li><a href="#">Information</a></li>
+                    <li><a href="#">Interests</a></li>
+                    <li><a href="#">Friends</a></li>
+                </ul>
+            </nav>
 
-    <!-- WELCOME 文字交互效果区域 -->
-    <section class="text-effect-section">
-        <iframe src="text-effect.html" title="WELCOME 文字交互效果"></iframe>
-    </section>
+            <div class="hero-title-box">
+                <h1 class="hero-title">I'm the protagonist.</h1>
+                <p class="hero-subtitle">Hakuna Matata</p>
+            </div>
+
+            <div class="hero-scroll-cue" aria-hidden="true"></div>
+        </header>
+    </div>
 
     <div class="container">
         <div class="content-card">
@@ -362,6 +454,81 @@
             <p>&copy; 2026 我的个人网页 | Powered by GitHub Pages</p>
         </div>
     </div>
+    <script>
+        window.addEventListener("load", () => {
+            const wrapper = document.querySelector(".hero-scroll-wrapper");
+            const windowImages = document.querySelectorAll(".portal-window img");
+            const portalBg = document.querySelector(".portal-bg");
+            const titleBox = document.querySelector(".hero-title-box");
+            const scrollCue = document.querySelector(".hero-scroll-cue");
 
+            if (!wrapper || !windowImages.length || !portalBg) {
+                return;
+            }
+
+            if (window.gsap && window.ScrollTrigger) {
+                gsap.registerPlugin(ScrollTrigger);
+                gsap.timeline({
+                    scrollTrigger: {
+                        trigger: wrapper,
+                        start: "top top",
+                        end: "bottom bottom",
+                        scrub: true
+                    }
+                })
+                .to(windowImages, {
+                    scale: 2.25,
+                    z: 350,
+                    opacity: 0,
+                    transformOrigin: "52% 40%",
+                    ease: "power1.inOut"
+                })
+                .to(portalBg, {
+                    scale: 1,
+                    backgroundPosition: "50% 50%",
+                    transformOrigin: "52% 40%",
+                    ease: "power1.inOut"
+                }, "<")
+                .to([titleBox, scrollCue], {
+                    opacity: 0,
+                    y: -24,
+                    ease: "power1.inOut"
+                }, "<");
+                return;
+            }
+
+            const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+            const ease = (value) => value < 0.5
+                ? 2 * value * value
+                : 1 - Math.pow(-2 * value + 2, 2) / 2;
+
+            const updatePortal = () => {
+                const rect = wrapper.getBoundingClientRect();
+                const distance = wrapper.offsetHeight - window.innerHeight;
+                const rawProgress = distance > 0 ? -rect.top / distance : 0;
+                const progress = ease(clamp(rawProgress, 0, 1));
+
+                windowImages.forEach((windowImage) => {
+                    windowImage.style.transformOrigin = "52% 40%";
+                    windowImage.style.transform = `scale(${1 + progress * 1.25}) translateZ(${progress * 350}px)`;
+                    windowImage.style.opacity = `${1 - progress}`;
+                });
+
+                portalBg.style.transformOrigin = "52% 40%";
+                portalBg.style.transform = `scale(${1.22 - progress * 0.22})`;
+                portalBg.style.backgroundPosition = `${50 - progress * 0}% ${43 + progress * 7}%`;
+
+                [titleBox, scrollCue].forEach((element) => {
+                    if (!element) return;
+                    element.style.opacity = `${1 - progress}`;
+                    element.style.transform = `translateY(${-24 * progress}px)`;
+                });
+            };
+
+            updatePortal();
+            window.addEventListener("scroll", updatePortal, { passive: true });
+            window.addEventListener("resize", updatePortal);
+        });
+    </script>
 </body>
 </html>
